@@ -30,6 +30,7 @@
   "dependencies": {
     "@types/axios": "^0.14.0",
     "@types/jpeg-js": "^0.3.7",
+    "@webgpu/types": "^0.1.19",
     "buffer": "^6.0.3",
     "lodash": "^4.17.21"
   },
