@@ -1,8 +1,8 @@
 import * as  _ from 'lodash';
-import { decode, encode, RawImageData, BufferLike } from 'jpeg-js';
 
-const axios = require('axios').default;
 
+
+/*
 async function getImage(url) {
   (document.getElementById('inputimg') as HTMLImageElement).src = 'http://localhost:1708/image0.jpeg';
   const response = await axios.get(url,  { responseType: 'arraybuffer' });
@@ -33,6 +33,7 @@ async function getImage(url) {
     (document.getElementById('outputimg') as HTMLImageElement).src = processed;
   });
 }
+*/
 
 async function processImage (array: Uint8Array, width: number, height: number) : Promise<Uint8Array> {
   const adapter = await navigator.gpu.requestAdapter();
@@ -169,5 +170,5 @@ async function processImage (array: Uint8Array, width: number, height: number) :
   });
 }
 
-const url = 'http://localhost:1708/image0.jpeg';
-getImage(url);
+//const url = 'http://localhost:1708/image0.jpeg';
+//getImage(url);

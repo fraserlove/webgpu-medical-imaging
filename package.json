@@ -1,13 +1,12 @@
 {
-  "name": "node-server",
-  "version": "1.0.0",
+  "name": "webgpu-server",
+  "version": "0.0.1",
   "description": "",
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack serve --open",
-    "build": "webpack",
-    "start-flask": "python3 ../flask-server/server.py"
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
@@ -15,9 +14,6 @@
   },
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": ""
-  },
   "homepage": "",
   "devDependencies": {
     "@types/lodash": "^4.14.182",
@@ -28,8 +24,6 @@
     "webpack-dev-server": "^4.9.2"
   },
   "dependencies": {
-    "@types/axios": "^0.14.0",
-    "@types/jpeg-js": "^0.3.7",
     "@webgpu/types": "^0.1.19",
     "buffer": "^6.0.3",
     "lodash": "^4.17.21"

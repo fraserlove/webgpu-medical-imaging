@@ -1,5 +1,3 @@
-__pycache__/
-testlib/
 dist/
 .DS_Store
 node_modules/
