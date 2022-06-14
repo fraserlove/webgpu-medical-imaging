@@ -1,12 +1,9 @@
 const path = require('path');
 const webpack = require('webpack');
+const nodeExternals = require('webpack-node-externals');
 
-module.exports = {
-  entry: './src/index.ts',
+const common = {
   devtool: 'inline-source-map',
-  devServer: {
-    static: './dist',
-  },
   module: {
     rules: [
       {
@@ -18,18 +15,41 @@ module.exports = {
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
-    fallback: { "buffer": require.resolve("buffer/") }
-  },
-  output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'),
+    fallback: { 
+      "buffer": require.resolve('buffer/'),
+   }
   },
   mode: 'development',
   plugins: [
+    
     // CRITICAL: Work around for Buffer is undefined:
     // https://github.com/webpack/changelog-v5/issues/10
     new webpack.ProvidePlugin({
         Buffer: ['buffer', 'Buffer'],
     }),
-],
-};
+  ]
+}
+
+const frontend = {
+  entry: './frontend/index.ts',
+  output: {
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'frontend/dist'),
+  },
+
+}
+
+const backend = {
+  entry: './backend/main.ts',
+  output: {
+    filename: 'main.js',
+    path: path.resolve(__dirname, 'backend/build'),
+  },
+  target: 'node',
+  externals: [nodeExternals()],
+}
+
+module.exports = [
+  Object.assign({} , common, frontend),
+  Object.assign({} , common, backend)
+];
