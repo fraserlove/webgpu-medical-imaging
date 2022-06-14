@@ -11,11 +11,7 @@ git clone https://github.com/fraserlove/webgpu-rendering-dicom-images.git
 cd webgpu-rendering-dicom-images
 npm install
 ```
-Build the Node.js project using the following:
-```
-npm run build
-```
-Finally run the Node.js server with:
+Build the frontend and backend then run the backend Node.js server with using the following:
 ```
 npm start
 ```
