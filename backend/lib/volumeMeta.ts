@@ -1,7 +1,7 @@
 var convert = require('xml-js');
 var fs = require('fs');
 
-export class Volume {
+export class VolumeMeta {
     
     version: number;
     width: number;
@@ -13,9 +13,9 @@ export class Volume {
     boundingBox: number[];
     filename: string;
 
-    constructor(file: string) {
-        var xml = fs.readFileSync('./res/' + file + '.xml', 'utf8');
-        var options = {compact: true, nativeType: true, textKey: '_'};
+    constructor(path: string) {
+        var xml = fs.readFileSync(path, 'utf8');
+        var options = {compact: true, textKey: '_'};
         var result = convert.xml2js(xml, options);
 
         this.version = result['Volume_View']['Version']['_'];
@@ -26,6 +26,7 @@ export class Volume {
         this.bytesPerLine = result['Volume_View']['Bytes_per_line']['_'];
         this.pixelFormat = result['Volume_View']['Pixel_Format']['_'];
         this.boundingBox = result['Volume_View']['Bounding_box']['_'];
-        this.filename = result['Volume_View']['Filename']['_'];
+        this.filename = result['Volume_View']['Filename']['_'];   
     }
+
 }

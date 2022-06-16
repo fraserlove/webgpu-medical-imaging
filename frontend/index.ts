@@ -1,4 +1,55 @@
 import * as  _ from 'lodash';
+import { text } from 'stream/consumers';
+import { Volume } from './volume';
+
+main()
+
+async function main () {
+  const volume = await new Volume();
+  webGPU(volume);
+}
+
+/*
+function webGPUTextureFromImageBitmapOrCanvas (gpuDevice, source) {
+  const textureDescriptor = {
+    // Unlike in WebGL, the size of our texture must be set at texture creation time.
+    // This means we have to wait until the image is loaded to create the texture, since we won't
+    // know the size until then.
+    size: { width: source.width, height: source.height },
+    format: 'r16sint',
+    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+  };
+  const texture = gpuDevice.createTexture(textureDescriptor);
+
+  gpuDevice.queue.copyExternalImageToTexture({ source }, { texture }, textureDescriptor.size);
+
+  return texture;
+}
+*/
+
+async function webGPU (volume) {
+  const adapter = await navigator.gpu.requestAdapter();
+  const device = await adapter.requestDevice();
+
+  const texture = device.createTexture({
+    size: [volume.width, volume.height, volume.depth],
+    format: volume.format,
+    usage: GPUTextureUsage.COPY_DST,
+    dimension: '3d'
+  });
+
+  const imageDataLayout = {
+    offset: 0,
+    bytesPerRow: volume.bytesPerLine,
+    rowsPerImage: volume.height
+  };
+
+  console.log(imageDataLayout);
+  console.log(volume.size());
+  console.log(volume.data.byteLength);
+
+  device.queue.writeTexture({ texture }, volume.data, imageDataLayout, volume.size());
+}
 
 async function processImage (array: Uint8Array, width: number, height: number) : Promise<Uint8Array> {
   const adapter = await navigator.gpu.requestAdapter();
