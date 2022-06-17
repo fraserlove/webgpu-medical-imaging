@@ -7,9 +7,11 @@ export class Volume {
     depth: number;
     bitsPerVoxel: number;
     bytesPerLine: number;
-    format: any;
     boundingBox: number[];
     data: ArrayBuffer;
+    textureFormat: any;
+    channelFormat: any;
+    sampleType: any;
 
     constructor() {
         return (async (): Promise<Volume> => {
@@ -38,12 +40,21 @@ export class Volume {
     }
 
     private findFormat(format) {
-        if (format == 'gray8')
-            this.format = 'r8uint'
-        else if (format == 'gray16')
-            this.format = 'r16uint'
-        else if (format == 'gray16s')
-            this.format = 'r16sint'
+        if (format == 'gray8') {
+            this.textureFormat = 'r8uint';
+            this.channelFormat = 'u32';
+            this.sampleType = 'uint';
+        }
+        else if (format == 'gray16') {
+            this.textureFormat = 'r16uint';
+            this.channelFormat = 'u32';
+            this.sampleType = 'uint';
+        }
+        else if (format == 'gray16s') {
+            this.textureFormat = 'r16sint';
+            this.channelFormat = 'i32';
+            this.sampleType = 'sint';
+        }
         else
             console.error('Invalid pixel format for texture.');
     }
