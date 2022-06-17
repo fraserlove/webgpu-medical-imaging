@@ -1,13 +1,21 @@
 import * as  _ from 'lodash';
-import { Volume } from './structures';
+import { Volume } from './volume';
 import { getShader } from './computeShader';
 
-main()
+const windowWidth = 512;
+const windowHeight = 512;
 
-const matrixSize = 16 * 4; // 4x4 matrix
-const offset = 256; // transformationBindGroup offset must be 256-byte aligned
-const uniformBufferSize = offset;
-const windowSize = [512, 512];
+export const uniformData = new Float32Array([
+
+  // Transformation matrix
+  1.0, 0.0, 0.0, 0.0,
+  0.0, 1.0, 0.0, 0.0,
+  0.0, 0.0, 1.0, 0.0,
+  0.0, 0.0, 0.0, 1.0,
+
+  // Canvas width and height
+  windowWidth, windowHeight
+]);
 
 async function main () {
   const volume = await new Volume();
@@ -20,27 +28,33 @@ async function webGPU (volume) {
   const device = await adapter.requestDevice();
 
   const canvas = document.createElement('canvas');
-  canvas.width = windowSize[0];
-  canvas.height = windowSize[1];
-  const context = canvas.getContext('webgpu').configure({
+  canvas.width = windowWidth;
+  canvas.height = windowHeight;
+
+  const context = canvas.getContext('webgpu');
+  context.configure({
     device: device,
     format: navigator.gpu.getPreferredCanvasFormat(),
-    alphaMode: 'premultiplied'
+    alphaMode: 'premultiplied',
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
   });
 
   // CREATE BUFFERS
-  const transformationBuffer = device.createBuffer({
-    size: uniformBufferSize,
-    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  const uniformBuffer = device.createBuffer({
+    size: uniformData.byteLength,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
   });
 
   // TEXTURE CREATION
   const canvasTexture = device.createTexture({
     size: [canvas.width, canvas.height],
     format: 'r8uint',
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
     dimension: '2d'
   });
+
+  //const text = context.getCurrentTexture();
+  //const textView = text.createView();
 
   const volumeTexture = device.createTexture({
     size: [volume.width, volume.height, volume.depth],
@@ -98,10 +112,11 @@ async function webGPU (volume) {
     ]
   });
 
+
   const bindGroup = device.createBindGroup({
     layout: bindGroupLayout,
     entries: [
-      {binding: 0, resource: {buffer: transformationBuffer}},
+      {binding: 0, resource: {buffer: uniformBuffer}},
       {binding: 1, resource: volumeTexture.createView()},
       {binding: 2, resource: canvasTexture.createView()},
       {binding: 3, resource: sampler}
@@ -127,10 +142,11 @@ async function webGPU (volume) {
   //commandEncoder.copyBufferToBuffer(gpuResultBuffer, 0, gpuReadBuffer, 0, array.byteLength);
   device.queue.submit([commandEncoder.finish()]);
 
-
   console.log(imageDataLayout);
   console.log(volume.size());
   console.log(volume.data.byteLength);
   console.log(canvas.getAttribute('width') + ' x ' + canvas.getAttribute('height'));
   
 }
+
+main()
