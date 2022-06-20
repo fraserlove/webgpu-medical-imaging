@@ -75,8 +75,7 @@ export class VolumeRenderer {
         this.context.configure({
             device: this.device,
             format: this.canvasFormat,
-            alphaMode: 'premultiplied',
-            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
+            alphaMode: 'premultiplied'
         });
 
         this.uniformBuffer = this.device.createBuffer({
@@ -88,13 +87,6 @@ export class VolumeRenderer {
             magFilter: 'linear',
             minFilter: 'linear'
         });
-
-        /*this.canvasTexture = this.device.createTexture({
-            size: [this.canvas.width, this.canvas.height],
-            format: 'r8uint',
-            usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-            dimension: '2d'
-        });*/
 
         this.canvasTexture = this.context.getCurrentTexture();
         this.canvasTextureView = this.canvasTexture.createView();
@@ -119,7 +111,7 @@ export class VolumeRenderer {
             entries: [
                 {
                     binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT,
+                    visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX,
                     buffer: { type: 'uniform' }
                 } as GPUBindGroupLayoutEntry,
                 {
@@ -127,13 +119,8 @@ export class VolumeRenderer {
                     visibility: GPUShaderStage.FRAGMENT,
                     texture: { sampleType: this.volume.sampleType, viewDimension: '3d' }
                 } as GPUBindGroupLayoutEntry,
-                /*{
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: { sampleType: 'uint', viewDimension: '2d' }
-                } as GPUBindGroupLayoutEntry,*/
                 {
-                    binding: 3,
+                    binding: 2,
                     visibility: GPUShaderStage.FRAGMENT,
                     sampler: { type: 'filtering' }
                 } as GPUBindGroupLayoutEntry
@@ -145,8 +132,7 @@ export class VolumeRenderer {
             entries: [
                 { binding: 0, resource: { buffer: this.uniformBuffer } },
                 { binding: 1, resource: this.volumeTexture.createView() },
-                /*{ binding: 2, resource: this.canvasTextureView },*/
-                { binding: 3, resource: this.sampler }
+                { binding: 2, resource: this.sampler }
             ]
         });
 
@@ -156,7 +142,26 @@ export class VolumeRenderer {
             }),
             vertex: {
                 module: this.device.createShaderModule({ code: shader }),
-                entryPoint: 'vert_main'
+                entryPoint: 'vert_main',
+                buffers: [
+                    {
+                        arrayStride: 4 * 3 + 4 * 4,
+                        attributes: [
+                            {
+                                // position
+                                shaderLocation: 0,
+                                offset: 0,
+                                format: 'float32x4' as GPUVertexFormat
+                            },
+                            {
+                                // uv
+                                shaderLocation: 1,
+                                offset: 4 * 4,
+                                format: 'float32x3' as GPUVertexFormat
+                            }
+                        ]
+                    }
+                ]
             },
             fragment: {
                 module: this.device.createShaderModule({ code: shader }),
