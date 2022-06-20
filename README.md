@@ -7,7 +7,7 @@ Make sure you have git and node.js installed.
 
 Clone the repository and download and install the Node.js packages:
 ```
-git clone https://github.com/fraserlove/webgpu-rendering-dicom-images.git
+git clone ...
 cd webgpu-rendering-medical-imaging
 npm install
 ```
