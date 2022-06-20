@@ -1,8 +1,5 @@
 import { Volume } from './volume';
-import { getShader } from './computeShader';
-
-const windowWidth = 512;
-const windowHeight = 512;
+import shader from '../shaders/shader.wgsl';
 
 export const uniformData = new Float32Array([
 
@@ -13,10 +10,10 @@ export const uniformData = new Float32Array([
     0.0, 0.0, 0.0, 1.0,
   
     // Canvas width and height
-    windowWidth, windowHeight
+    //windowWidth, windowHeight
 ]);
 
-class VolumeRenderer {
+export class VolumeRenderer {
     volume: Volume;
 
     adapter: GPUAdapter;
@@ -25,22 +22,24 @@ class VolumeRenderer {
 
     canvas: HTMLCanvasElement;
     context: GPUCanvasContext;
+    canvasFormat: GPUTextureFormat;
+    canvasTextureView: GPUTextureView;
 
     uniformBuffer: GPUBuffer;
     canvasTexture: GPUTexture;
     volumeTexture: GPUTexture;
     sampler: GPUSampler;
-    canvasTextureView: GPUTextureView;
 
     bindGroupLayout: GPUBindGroupLayout;
     bindGroup: GPUBindGroup;
-    pipeline: GPUComputePipeline;
+    pipeline: GPURenderPipeline;
     
     commandEncoder: GPUCommandEncoder;
-    passEncoder: GPUComputePassEncoder;
+    passEncoder: GPURenderPassEncoder;
 
-    constructor(volume) {
+    constructor(volume, canvas) {
         this.volume = volume;
+        this.canvas = canvas;
     }
 
     async start() {
@@ -71,14 +70,11 @@ class VolumeRenderer {
     }
 
     initResources() {
-        this.canvas = document.createElement('canvas');
-        this.canvas.width = windowWidth;
-        this.canvas.height = windowHeight;
-
         this.context = this.canvas.getContext('webgpu');
+        this.canvasFormat = navigator.gpu.getPreferredCanvasFormat(),
         this.context.configure({
             device: this.device,
-            format: navigator.gpu.getPreferredCanvasFormat(),
+            format: this.canvasFormat,
             alphaMode: 'premultiplied',
             usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
         });
@@ -88,12 +84,20 @@ class VolumeRenderer {
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
-        this.canvasTexture = this.device.createTexture({
+        this.sampler = this.device.createSampler({
+            magFilter: 'linear',
+            minFilter: 'linear'
+        });
+
+        /*this.canvasTexture = this.device.createTexture({
             size: [this.canvas.width, this.canvas.height],
             format: 'r8uint',
-            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+            usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
             dimension: '2d'
-        });
+        });*/
+
+        this.canvasTexture = this.context.getCurrentTexture();
+        this.canvasTextureView = this.canvasTexture.createView();
 
         this.volumeTexture = this.device.createTexture({
             size: [this.volume.width, this.volume.height, this.volume.depth],
@@ -102,31 +106,35 @@ class VolumeRenderer {
             dimension: '3d'
         });
 
-        this.sampler = this.device.createSampler({
-            magFilter: 'linear',
-            minFilter: 'linear'
-        });
+        const imageDataLayout = {
+            offset: 0,
+            bytesPerRow: this.volume.bytesPerLine,
+            rowsPerImage: this.volume.height
+        };
+
+        this.queue.writeTexture({ texture: this.volumeTexture }, this.volume.data, imageDataLayout, this.volume.size());
+
 
         this.bindGroupLayout = this.device.createBindGroupLayout({
             entries: [
                 {
                     binding: 0,
-                    visibility: GPUShaderStage.COMPUTE,
+                    visibility: GPUShaderStage.FRAGMENT,
                     buffer: { type: 'uniform' }
                 } as GPUBindGroupLayoutEntry,
                 {
                     binding: 1,
-                    visibility: GPUShaderStage.COMPUTE,
+                    visibility: GPUShaderStage.FRAGMENT,
                     texture: { sampleType: this.volume.sampleType, viewDimension: '3d' }
                 } as GPUBindGroupLayoutEntry,
-                {
+                /*{
                     binding: 2,
-                    visibility: GPUShaderStage.COMPUTE,
+                    visibility: GPUShaderStage.FRAGMENT,
                     texture: { sampleType: 'uint', viewDimension: '2d' }
-                } as GPUBindGroupLayoutEntry,
+                } as GPUBindGroupLayoutEntry,*/
                 {
                     binding: 3,
-                    visibility: GPUShaderStage.COMPUTE,
+                    visibility: GPUShaderStage.FRAGMENT,
                     sampler: { type: 'filtering' }
                 } as GPUBindGroupLayoutEntry
             ]
@@ -137,47 +145,43 @@ class VolumeRenderer {
             entries: [
                 { binding: 0, resource: { buffer: this.uniformBuffer } },
                 { binding: 1, resource: this.volumeTexture.createView() },
-                { binding: 2, resource: this.canvasTexture.createView() },
+                /*{ binding: 2, resource: this.canvasTextureView },*/
                 { binding: 3, resource: this.sampler }
             ]
         });
 
-        this.pipeline = this.device.createComputePipeline({
+        this.pipeline = this.device.createRenderPipeline({
             layout: this.device.createPipelineLayout({
                 bindGroupLayouts: [this.bindGroupLayout]
             }),
-            compute: {
-                module: this.device.createShaderModule({ code: getShader(this.volume.channelFormat) }),
-                entryPoint: 'main'
+            vertex: {
+                module: this.device.createShaderModule({ code: shader }),
+                entryPoint: 'vert_main'
+            },
+            fragment: {
+                module: this.device.createShaderModule({ code: shader }),
+                entryPoint: 'frag_main',
+                targets: [{ format: this.canvasFormat }]
             }
         });
-
-        const imageDataLayout = {
-            offset: 0,
-            bytesPerRow: this.volume.bytesPerLine,
-            rowsPerImage: this.volume.height
-        };
-        
-        this.queue.writeTexture({ texture: this.volumeTexture }, this.volume.data, imageDataLayout, this.volume.size());
     }
 
     executePipeline() {
         this.commandEncoder = this.device.createCommandEncoder();
-        this.passEncoder = this.commandEncoder.beginComputePass();
+        this.passEncoder = this.commandEncoder.beginRenderPass({
+            colorAttachments: [{
+                view: this.canvasTextureView,
+                clearValue: [0.0, 0.0, 0.0, 1.0],
+                loadOp: 'clear' as GPULoadOp,
+                storeOp: 'store' as GPUStoreOp
+            }]
+        });
 
         this.passEncoder.setPipeline(this.pipeline);
         this.passEncoder.setBindGroup(0, this.bindGroup);
-        this.passEncoder.dispatchWorkgroups(this.canvas.width, this.canvas.height);
+        this.passEncoder.draw(0);
         this.passEncoder.end();
 
         this.queue.submit([this.commandEncoder.finish()]);
     }
 }
-
-async function main() {
-    const volume = await new Volume();
-    const volumeRenderer = new VolumeRenderer(volume);
-    volumeRenderer.start();
-}
-
-main()

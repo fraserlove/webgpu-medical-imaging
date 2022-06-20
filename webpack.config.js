@@ -11,6 +11,10 @@ const common = {
         use: 'ts-loader',
         exclude: /node_modules/,
       },
+      {
+        test: /\.(wgsl|glsl|vs|fs)$/,
+        loader: 'ts-shader-loader'
+      }
     ],
   },
   resolve: {
@@ -31,7 +35,7 @@ const common = {
 }
 
 const frontend = {
-  entry: './frontend/index.ts',
+  entry: './frontend/src/index.ts',
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'frontend/dist'),
