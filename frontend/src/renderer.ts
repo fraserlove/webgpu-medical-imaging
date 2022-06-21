@@ -8,9 +8,6 @@ export const uniformData = new Float32Array([
     0.0, 1.0, 0.0, 0.0,
     0.0, 0.0, 1.0, 0.0,
     0.0, 0.0, 0.0, 1.0,
-  
-    // Canvas width and height
-    //windowWidth, windowHeight
 ]);
 
 export class VolumeRenderer {
@@ -26,6 +23,7 @@ export class VolumeRenderer {
     canvasTextureView: GPUTextureView;
 
     uniformBuffer: GPUBuffer;
+    verticesBuffer: GPUBuffer;
     canvasTexture: GPUTexture;
     volumeTexture: GPUTexture;
     sampler: GPUSampler;
@@ -36,31 +34,49 @@ export class VolumeRenderer {
     
     commandEncoder: GPUCommandEncoder;
     passEncoder: GPURenderPassEncoder;
+    renderPassDescriptor: GPURenderPassDescriptor;
 
     constructor(volume, canvas) {
         this.volume = volume;
         this.canvas = canvas;
     }
 
-    async start() {
+    public async start() {
         console.log('Initialising WebGPU...');
         if (await this.initWebGPU()) {
+            console.log('Creating pipeline...');
+            this.createPipeline();
             console.log('Initialising Resources...');
             this.initResources();
             console.log('Executing Pipeline...');
-            this.executePipeline();
-            console.log('Done.')
         }
         else {
             console.log('WebGPU support not detected.')
         }
     }
 
-    async initWebGPU(): Promise<boolean> {
+    private async initWebGPU(): Promise<boolean> {
         try {
             this.adapter = await navigator.gpu.requestAdapter();
             this.device = await this.adapter.requestDevice();
             this.queue = this.device.queue;
+
+            this.context = this.canvas.getContext('webgpu');
+            this.canvasFormat = 'rgba16float', //navigator.gpu.getPreferredCanvasFormat(),
+            this.context.configure({
+                device: this.device,
+                format: this.canvasFormat,
+                alphaMode: 'premultiplied'
+            });
+
+            this.renderPassDescriptor = {
+                colorAttachments: [{
+                    view: undefined, // set in render loop
+                    clearValue: [0.0, 0.0, 0.0, 1.0],
+                    loadOp: 'clear' as GPULoadOp,
+                    storeOp: 'store' as GPUStoreOp
+                }]
+            }
         }
         catch(error) {
             console.error(error);
@@ -69,70 +85,24 @@ export class VolumeRenderer {
         return true;
     }
 
-    initResources() {
-        this.context = this.canvas.getContext('webgpu');
-        this.canvasFormat = navigator.gpu.getPreferredCanvasFormat(),
-        this.context.configure({
-            device: this.device,
-            format: this.canvasFormat,
-            alphaMode: 'premultiplied'
-        });
-
-        this.uniformBuffer = this.device.createBuffer({
-            size: uniformData.byteLength,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-
-        this.sampler = this.device.createSampler({
-            magFilter: 'linear',
-            minFilter: 'linear'
-        });
-
-        this.canvasTexture = this.context.getCurrentTexture();
-        this.canvasTextureView = this.canvasTexture.createView();
-
-        this.volumeTexture = this.device.createTexture({
-            size: [this.volume.width, this.volume.height, this.volume.depth],
-            format: this.volume.textureFormat,
-            usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-            dimension: '3d'
-        });
-
-        const imageDataLayout = {
-            offset: 0,
-            bytesPerRow: this.volume.bytesPerLine,
-            rowsPerImage: this.volume.height
-        };
-
-        this.queue.writeTexture({ texture: this.volumeTexture }, this.volume.data, imageDataLayout, this.volume.size());
-
-
+    private createPipeline() {
         this.bindGroupLayout = this.device.createBindGroupLayout({
             entries: [
                 {
                     binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX,
+                    visibility: GPUShaderStage.FRAGMENT,
                     buffer: { type: 'uniform' }
                 } as GPUBindGroupLayoutEntry,
                 {
                     binding: 1,
                     visibility: GPUShaderStage.FRAGMENT,
-                    texture: { sampleType: this.volume.sampleType, viewDimension: '3d' }
+                    texture: { sampleType: 'float', viewDimension: '3d' }
                 } as GPUBindGroupLayoutEntry,
                 {
                     binding: 2,
                     visibility: GPUShaderStage.FRAGMENT,
                     sampler: { type: 'filtering' }
                 } as GPUBindGroupLayoutEntry
-            ]
-        });
-        
-        this.bindGroup = this.device.createBindGroup({
-            layout: this.bindGroupLayout,
-            entries: [
-                { binding: 0, resource: { buffer: this.uniformBuffer } },
-                { binding: 1, resource: this.volumeTexture.createView() },
-                { binding: 2, resource: this.sampler }
             ]
         });
 
@@ -144,23 +114,6 @@ export class VolumeRenderer {
                 module: this.device.createShaderModule({ code: shader }),
                 entryPoint: 'vert_main',
                 buffers: [
-                    {
-                        arrayStride: 4 * 3 + 4 * 4,
-                        attributes: [
-                            {
-                                // position
-                                shaderLocation: 0,
-                                offset: 0,
-                                format: 'float32x4' as GPUVertexFormat
-                            },
-                            {
-                                // uv
-                                shaderLocation: 1,
-                                offset: 4 * 4,
-                                format: 'float32x3' as GPUVertexFormat
-                            }
-                        ]
-                    }
                 ]
             },
             fragment: {
@@ -171,17 +124,48 @@ export class VolumeRenderer {
         });
     }
 
-    executePipeline() {
-        this.commandEncoder = this.device.createCommandEncoder();
-        this.passEncoder = this.commandEncoder.beginRenderPass({
-            colorAttachments: [{
-                view: this.canvasTextureView,
-                clearValue: [0.0, 0.0, 0.0, 1.0],
-                loadOp: 'clear' as GPULoadOp,
-                storeOp: 'store' as GPUStoreOp
-            }]
+    private initResources() {
+        this.uniformBuffer = this.device.createBuffer({
+            size: uniformData.byteLength,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
+        this.sampler = this.device.createSampler({
+            magFilter: 'linear',
+            minFilter: 'linear'
+        });
+
+        this.volumeTexture = this.device.createTexture({
+            size: [this.volume.width, this.volume.height, this.volume.depth],
+            format: 'r16float',
+            usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+            dimension: '3d'
+        });
+
+        const imageDataLayout = {
+            offset: 0,
+            bytesPerRow: this.volume.bytesPerLine,
+            rowsPerImage: this.volume.height
+        };
+
+        this.queue.writeTexture({ texture: this.volumeTexture }, this.volume.data, imageDataLayout, this.volume.size());
+        
+        
+        this.bindGroup = this.device.createBindGroup({
+            layout: this.bindGroupLayout,
+            entries: [
+                { binding: 0, resource: { buffer: this.uniformBuffer } },
+                { binding: 1, resource: this.volumeTexture.createView() },
+                { binding: 2, resource: this.sampler }
+            ]
+        });
+    }
+
+    public executePipeline() {
+        this.renderPassDescriptor.colorAttachments[0].view = this.context.getCurrentTexture().createView();
+
+        this.commandEncoder = this.device.createCommandEncoder();
+        this.passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
         this.passEncoder.setPipeline(this.pipeline);
         this.passEncoder.setBindGroup(0, this.bindGroup);
         this.passEncoder.draw(0);

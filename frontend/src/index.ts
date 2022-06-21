@@ -13,7 +13,14 @@ async function main() {
     document.body.appendChild(canvas);
 
     const volumeRenderer = new VolumeRenderer(volume, canvas);
-    volumeRenderer.start();
+    await volumeRenderer.start();
+    
+    const render = () => {
+        console.log('frame');
+        volumeRenderer.executePipeline();
+        requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
 }
 
 main()
