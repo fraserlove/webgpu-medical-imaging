@@ -62,21 +62,12 @@ export class VolumeRenderer {
             this.queue = this.device.queue;
 
             this.context = this.canvas.getContext('webgpu');
-            this.canvasFormat = 'rgba16float', //navigator.gpu.getPreferredCanvasFormat(),
+            this.canvasFormat = navigator.gpu.getPreferredCanvasFormat(),
             this.context.configure({
                 device: this.device,
                 format: this.canvasFormat,
                 alphaMode: 'premultiplied'
             });
-
-            this.renderPassDescriptor = {
-                colorAttachments: [{
-                    view: undefined, // set in render loop
-                    clearValue: [0.0, 0.0, 0.0, 1.0],
-                    loadOp: 'clear' as GPULoadOp,
-                    storeOp: 'store' as GPUStoreOp
-                }]
-            }
         }
         catch(error) {
             console.error(error);
@@ -137,7 +128,8 @@ export class VolumeRenderer {
 
         this.volumeTexture = this.device.createTexture({
             size: [this.volume.width, this.volume.height, this.volume.depth],
-            format: 'r16float',
+            // rg8unorm or r8unorm - red(low bits), green(high bits)
+            format: this.volume.textureFormat,
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
             dimension: '3d'
         });
@@ -159,6 +151,15 @@ export class VolumeRenderer {
                 { binding: 2, resource: this.sampler }
             ]
         });
+
+        this.renderPassDescriptor = {
+            colorAttachments: [{
+                view: undefined, // set in render loop
+                clearValue: [0.0, 0.0, 0.0, 1.0],
+                loadOp: 'clear' as GPULoadOp,
+                storeOp: 'store' as GPUStoreOp
+            }]
+        }
     }
 
     public executePipeline() {

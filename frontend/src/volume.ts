@@ -41,19 +41,13 @@ export class Volume {
 
     private findFormat(format) {
         if (format == 'gray8') {
-            this.textureFormat = 'r8uint';
-            this.channelFormat = 'u32';
-            this.sampleType = 'uint';
+            this.textureFormat = 'r8unorm';
         }
         else if (format == 'gray16') {
-            this.textureFormat = 'r16uint';
-            this.channelFormat = 'u32';
-            this.sampleType = 'uint';
+            this.textureFormat = 'rg8unorm';
         }
         else if (format == 'gray16s') {
-            this.textureFormat = 'r16sint';
-            this.channelFormat = 'i32';
-            this.sampleType = 'sint';
+            this.textureFormat = 'rg8unorm';
         }
         else
             console.error('Invalid pixel format for texture.');

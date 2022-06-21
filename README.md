@@ -13,7 +13,7 @@ npm install
 ```
 Build the frontend and backend of the application:
 ```
-npm build
+npm run build
 ```
 Run the backend Node.js server, specifiying the path to the volume metadata `.xml` file (The corresponding raw data describing the volume must be stored in the same directory):
 ```

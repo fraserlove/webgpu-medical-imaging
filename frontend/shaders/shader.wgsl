@@ -8,11 +8,16 @@ struct Uniforms {
 
 @vertex
 fn vert_main() -> @builtin(position) vec4<f32> {
-  return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+  return vec4<f32>(100.0, 100.0, 0.0, 1.0);
+}
+
+fn sample(volumeTexture: texture_3d<f32>, volumeSampler: sampler, position: vec3<f32>) -> vec4<f32> {
+    var sample = textureSample(volumeTexture, volumeSampler, position);
+    var normed = (sample.x + sample.y * 255) / 256;
+    return vec4(normed, normed, normed, 1);
 }
 
 @fragment
 fn frag_main(@builtin(position) coord_in: vec4<f32>) -> @location(0) vec4<f32> {
-    return vec4<f32>(1.0, 1.0, 1.0, 1.0);
-    //return textureSample(volumeTexture, volumeSampler, vec3<f32>(coord_in.x, coord_in.y, coord_in.z));
+    return sample(volumeTexture, volumeSampler, vec3<f32>(coord_in.x, coord_in.y, coord_in.z));
 }
