@@ -3,6 +3,7 @@ var VolumeMeta = require('./lib/volumeMeta').VolumeMeta;
 var fs = require('fs');
 var path = require('path');
 var express = require('express');
+const { Transform } = require('stream');
 
 var port = 8080;
 var metaPath = path.resolve(process.argv[2]);
@@ -39,8 +40,33 @@ app.get('/volume/bounding_box', (req, res) => {
     return res.send(volume.boundingBox);
 });
 
+function signedToUnsigned(chunk: any) {
+    var signedData = new Int16Array(chunk.buffer);
+    var unsignedData = new Uint16Array(signedData.length);
+    for (var i = 0; i < signedData.length; i++) {
+        unsignedData[i] = signedData[i] + 2 ** 16;
+    }
+    //console.log('Signed:' + signedData[signedData.length - 1]);
+    //console.log('Unsigned:' + unsignedData[signedData.length - 1]);
+    return new Uint8Array(unsignedData.buffer);
+}
+
 app.get('/volume/data', (req, res) => {
-    return fs.createReadStream(path.resolve(metaPath, '../', volume.filename)).pipe(res);
+    var file = path.resolve(metaPath, '../', volume.filename);
+    if (volume.pixelFormat == 'gray16s') {
+
+        const transformStream = new Transform();
+
+        transformStream._transform = (chunk, encoding, callback) => {
+            transformStream.push(signedToUnsigned(chunk));
+            callback();
+        };
+
+        fs.createReadStream(file).pipe(transformStream).pipe(res);
+    }
+    else {
+        return fs.createReadStream(file).pipe(res);
+    }
 });
 
 app.get('/volume', (req, res) => {
