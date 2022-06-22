@@ -13,7 +13,7 @@ fn vert_main() -> @builtin(position) vec4<f32> {
 
 fn sample(volumeTexture: texture_3d<f32>, volumeSampler: sampler, position: vec3<f32>) -> vec4<f32> {
     var sample = textureSample(volumeTexture, volumeSampler, position);
-    var normed = (sample.x + sample.y * 255) / 256;
+    var normed = (sample.x + sample.y * 255) / 256; // sample.x = r, sample.y = g
     return vec4(normed, normed, normed, 1);
 }
 
