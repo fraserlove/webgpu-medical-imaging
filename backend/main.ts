@@ -41,14 +41,12 @@ app.get('/volume/bounding_box', (req, res) => {
 });
 
 function signedToUnsigned(chunk: any) {
-    var signedData = new Int16Array(chunk.buffer);
-    var unsignedData = new Uint16Array(signedData.length);
+    var signedData = new Uint16Array(chunk.buffer);
     for (var i = 0; i < signedData.length; i++) {
-        unsignedData[i] = signedData[i] + 2 ** 16;
+        signedData[i] &= 0xFFFF;
     }
-    //console.log('Signed:' + signedData[signedData.length - 1]);
-    //console.log('Unsigned:' + unsignedData[signedData.length - 1]);
-    return new Uint8Array(unsignedData.buffer);
+    console.log('Unsigned:' + signedData[signedData.length - 1]);
+    return new Uint8Array(signedData.buffer);
 }
 
 app.get('/volume/data', (req, res) => {
