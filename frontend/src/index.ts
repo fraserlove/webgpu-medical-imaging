@@ -15,12 +15,11 @@ async function main() {
     const volumeRenderer = new VolumeRenderer(volume, canvas);
     await volumeRenderer.start();
     
-    const render = () => {
-        console.log('frame');
-        volumeRenderer.executePipeline();
-        requestAnimationFrame(render);
+    const run = () => {
+        volumeRenderer.render();
+        requestAnimationFrame(run);
     }
-    requestAnimationFrame(render);
+    requestAnimationFrame(run);
 }
 
 main()
