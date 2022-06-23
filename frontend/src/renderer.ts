@@ -4,6 +4,7 @@ import mip from '../shaders/mip.wgsl';
 
 export class VolumeRenderer {
     volume: Volume;
+    settings;
 
     adapter: GPUAdapter;
     device: GPUDevice;
@@ -33,21 +34,22 @@ export class VolumeRenderer {
     renderUniformData: Float32Array;
     computeUniformData: Float32Array;
 
-    constructor(volume, canvas) {
+    constructor(volume, canvas, settings) {
         this.volume = volume;
         this.canvas = canvas;
+        this.settings = settings;
 
          this.computeUniformData = new Float32Array([
-            // Test data
-            1
-        ]);
-
-        this.renderUniformData = new Float32Array([
             // Transformation matrix
             1.0, 0.0, 0.0, 0.0,
             0.0, 1.0, 0.0, 0.0,
             0.0, 0.0, 1.0, 0.0,
             0.0, 0.0, 0.0, 1.0,
+        ]);
+
+        this.renderUniformData = new Float32Array([
+            // Window width and window level parameters
+            this.settings.width, this.settings.level
         ]);
     }
 
@@ -121,7 +123,7 @@ export class VolumeRenderer {
                 {
                     binding: 2,
                     visibility: GPUShaderStage.COMPUTE,
-                    storageTexture: { format: 'rgba8unorm', access: 'write-only', viewDimension: '2d'}
+                    storageTexture: { format: 'rgba16float', access: 'write-only', viewDimension: '2d'}
                 } as GPUBindGroupLayoutEntry,
             ]
         });
@@ -180,7 +182,7 @@ export class VolumeRenderer {
 
         this.mipTexture = this.device.createTexture({
             size: [this.volume.width, this.volume.height],
-            format: 'rgba8unorm',
+            format: 'rgba16float',
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING
         });
 
@@ -222,6 +224,12 @@ export class VolumeRenderer {
         }
     }
 
+    public updateSettings(settings) {
+        this.settings = settings;
+        this.renderUniformData = new Float32Array([this.settings.width, this.settings.level]);
+        this.queue.writeBuffer(this.renderUniformBuffer, 0, this.renderUniformData);
+    }
+
     private executeComputePipeline() {
         const passEncoder = this.commandEncoder.beginComputePass();
         passEncoder.setPipeline(this.computePipeline);
@@ -231,16 +239,16 @@ export class VolumeRenderer {
     }
 
     private executeRenderPipeline() {
+        this.renderPassDescriptor.colorAttachments[0].view = this.context.getCurrentTexture().createView();
         const passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
         passEncoder.setPipeline(this.renderPipeline);
         passEncoder.setBindGroup(0, this.renderBindGroup);
-        passEncoder.draw(0);
+        passEncoder.draw(6);
         passEncoder.end();
     }
 
     public render() {
         console.log('Executing Pipelines...');
-        this.renderPassDescriptor.colorAttachments[0].view = this.context.getCurrentTexture().createView();
 
         this.commandEncoder = this.device.createCommandEncoder();
         this.executeComputePipeline();
