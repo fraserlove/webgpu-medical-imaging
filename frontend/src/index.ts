@@ -6,7 +6,7 @@ const windowHeight = 512;
 
 var settings = {
     width: 1000.0/65535.0,
-    level: 0.48
+    level: 0.498
 }
 
 async function main() {

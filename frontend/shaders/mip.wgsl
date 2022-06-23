@@ -7,26 +7,19 @@ struct Uniforms {
 @group(0) @binding(2) var mipTexture: texture_storage_2d<rgba16float, write>;
 
 @compute
-@workgroup_size(1)
-fn main() {
-    for(var i: i32 = 0; i < 512; i++) {
-        for(var j: i32 = 0; j < 512; j++) {
-            var pixel: vec4<f32> = textureLoad(volumeTexture, vec3<i32>(i, j, 1), 0);
-            textureStore(mipTexture, vec2<i32>(i, j), pixel);
+@workgroup_size(8, 8)
+fn main(@builtin(global_invocation_id) globalID: vec3<u32>) {
+    var size: vec3<i32> = textureDimensions(volumeTexture);
+    var maxIntensity: f32 = 0; // Only dealing with unsigned integers
+    let pixelCoord: vec2<i32> = vec2<i32>(i32(globalID.x), i32(globalID.y));
+    
+    for (var k: i32 = 0; k < size.z; k++) {
+        var pixel: vec4<f32> = textureLoad(volumeTexture, vec3<i32>(pixelCoord, k), 0);
+        // Intensity stored over 8-bit red and green channels
+        var intensity = (pixel.x + pixel.y * 255) / 256;
+        if (intensity > maxIntensity) {
+            maxIntensity = intensity;
         }
     }
-    //var size: vec3<i32> = textureDimensions(volumeTexture);
-    //for(var i: i32 = 0; i < size.x; i++) {
-    //    for (var j: i32 = 0; j < size.y; j++) {
-    //        var max: f32 = -1e32;
-    //        for (var k: i32 = 0; k < size.z; k++) {
-    //            var pixel: vec4<f32> = textureLoad(volumeTexture, vec3<i32>(i, j, k), 0);
-    //            var val = (pixel.x + pixel.y * 255) / 256;
-    //            if (val > max) {
-    //                max = val;
-    //            }
-    //        }
-    //        textureStore(mipTexture, vec2<i32>(i, j), vec4<f32>(max, max, max, 1));
-    //    }
-    //}
+    textureStore(mipTexture, pixelCoord, vec4<f32>(maxIntensity, maxIntensity, maxIntensity, 1));
  }

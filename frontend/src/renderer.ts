@@ -2,9 +2,18 @@ import { Volume } from './volume';
 import shader from '../shaders/shader.wgsl';
 import mip from '../shaders/mip.wgsl';
 
+type Settings = {
+    width: number,
+    level: number
+};
+
 export class VolumeRenderer {
     volume: Volume;
-    settings;
+    settings: Settings;
+
+    tileDim: number;
+    blockDims: number[];
+    noWorkgroups: number[];
 
     adapter: GPUAdapter;
     device: GPUDevice;
@@ -38,6 +47,9 @@ export class VolumeRenderer {
         this.volume = volume;
         this.canvas = canvas;
         this.settings = settings;
+
+        this.blockDims = [8, 8]; // Must be same as workgroup size in compute shader
+        this.noWorkgroups = [Math.ceil(this.volume.width / this.blockDims[0]), Math.ceil(this.volume.height / this.blockDims[1])]
 
          this.computeUniformData = new Float32Array([
             // Transformation matrix
@@ -234,7 +246,7 @@ export class VolumeRenderer {
         const passEncoder = this.commandEncoder.beginComputePass();
         passEncoder.setPipeline(this.computePipeline);
         passEncoder.setBindGroup(0, this.computeBindGroup);
-        passEncoder.dispatchWorkgroups(1);
+        passEncoder.dispatchWorkgroups(this.noWorkgroups[0], this.noWorkgroups[1]);
         passEncoder.end();
     }
 
