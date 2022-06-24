@@ -1,6 +1,7 @@
 import { Volume } from './volume';
 import shader from '../shaders/shader.wgsl';
-import mip from '../shaders/mip.wgsl';
+import mip16 from '../shaders/mip16.wgsl';
+import mip8 from '../shaders/mip8.wgsl'
 import { projectionPlane } from './vertices';
 
 export class VolumeRenderer {
@@ -9,6 +10,7 @@ export class VolumeRenderer {
     wWidth: number;
     wLevel: number;
     noWorkgroups: number[];
+    computeShader: any;
 
     adapter: GPUAdapter;
     device: GPUDevice;
@@ -60,6 +62,11 @@ export class VolumeRenderer {
             // Window width and window level parameters
             this.wWidth, this.wLevel
         ]);
+
+        this.computeShader = mip16
+        if (this.volume.bitsPerVoxel == 8)
+            this.computeShader = mip8
+            
     }
 
     public async start() {
@@ -176,7 +183,7 @@ export class VolumeRenderer {
                 bindGroupLayouts: [this.computeBindGroupLayout]
             }),
             compute: {
-                module: this.device.createShaderModule({ code: mip }),
+                module: this.device.createShaderModule({ code: this.computeShader }),
                 entryPoint: 'main'
             }
         });
