@@ -31,7 +31,7 @@ export class Volume {
         this.depth = depth.data;
         this.bitsPerVoxel = bitsPerVoxel.data;
         this.bytesPerLine = bytesPerLine.data;
-        this.boundingBox = boundingBox.data;
+        this.boundingBox = boundingBox.data.substr(1, boundingBox.data.length-2).split(",");;
         this.data = data.data;
         this.findFormat();
     }
@@ -47,6 +47,10 @@ export class Volume {
 
     public size() {
         return [this.width, this.height, this.depth];
+    }
+
+    public maxDimension() {
+        return Math.max(...this.boundingBox);
     }
 
 }

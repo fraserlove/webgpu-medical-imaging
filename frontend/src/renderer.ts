@@ -1,8 +1,9 @@
 import { Volume } from './volume';
+import { projectionPlane } from './vertices';
 import shader from '../shaders/shader.wgsl';
 import mip16 from '../shaders/mip16.wgsl';
-import mip8 from '../shaders/mip8.wgsl'
-import { projectionPlane } from './vertices';
+import mip8 from '../shaders/mip8.wgsl';
+import { mat4 } from 'gl-matrix';
 
 export class VolumeRenderer {
     volume: Volume;
@@ -38,25 +39,23 @@ export class VolumeRenderer {
     renderPassDescriptor: GPURenderPassDescriptor;
 
     renderUniformData: Float32Array;
-    computeUniformData: Float32Array;
+    transform: Float32Array;
 
     blockDims = [8, 8];  // Must be same as workgroup size in compute shader
 
     constructor(volume, canvas, settings) {
         this.volume = volume;
+
         this.canvas = canvas;
+        this.canvas.width = volume.width;
+        this.canvas.height = volume.height;
+        
         this.wWidth = settings.wWidth;
         this.wLevel = settings.wLevel;
 
         this.noWorkgroups = [Math.ceil(this.volume.width / this.blockDims[0]), Math.ceil(this.volume.height / this.blockDims[1])]
 
-         this.computeUniformData = new Float32Array([
-            // Transformation matrix
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 1.0,
-        ]);
+        this.transform = mat4.create() as Float32Array;
 
         this.renderUniformData = new Float32Array([
             // Window width and window level parameters
@@ -196,7 +195,7 @@ export class VolumeRenderer {
         });
 
         this.computeUniformBuffer = this.device.createBuffer({
-            size: this.computeUniformData.byteLength,
+            size: this.transform.byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
@@ -222,7 +221,7 @@ export class VolumeRenderer {
         });
 
         this.outputTexture = this.device.createTexture({
-            size: [this.volume.width, this.volume.height],
+            size: [this.canvas.width, this.canvas.height],
             format: 'rgba16float',
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING
         });
@@ -235,7 +234,7 @@ export class VolumeRenderer {
 
         this.queue.writeTexture({ texture: this.volumeTexture }, this.volume.data, imageDataLayout, this.volume.size());
         this.queue.writeBuffer(this.renderUniformBuffer, 0, this.renderUniformData);
-        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.computeUniformData);
+        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.transform);
        
         this.renderBindGroup = this.device.createBindGroup({
             layout: this.renderBindGroupLayout,
@@ -290,13 +289,22 @@ export class VolumeRenderer {
         passEncoder.end();
     }
 
-    public render() {
-        console.log('Executing Pipelines...');
+    private rotate(rotX, rotY, rotZ) {
+        mat4.rotateX(this.transform, this.transform, rotX);
+        mat4.rotateY(this.transform, this.transform, rotY);
+        mat4.rotateZ(this.transform, this.transform, rotZ);
+        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.transform);
+    }
 
+    public render() {
+        //console.log('Executing Pipelines...');
         this.commandEncoder = this.device.createCommandEncoder();
         this.executeComputePipeline();
         this.executeRenderPipeline();
         this.queue.submit([this.commandEncoder.finish()]);
+
+        this.rotate(0.002, 0.002, -0.002);
+
     }
 
 }
