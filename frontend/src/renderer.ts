@@ -1,18 +1,13 @@
 import { Volume } from './volume';
 import shader from '../shaders/shader.wgsl';
 import mip from '../shaders/mip.wgsl';
-
-type Settings = {
-    width: number,
-    level: number
-};
+import { projectionPlane } from './vertices';
 
 export class VolumeRenderer {
     volume: Volume;
-    settings: Settings;
 
-    tileDim: number;
-    blockDims: number[];
+    wWidth: number;
+    wLevel: number;
     noWorkgroups: number[];
 
     adapter: GPUAdapter;
@@ -25,8 +20,8 @@ export class VolumeRenderer {
 
     renderUniformBuffer: GPUBuffer;
     computeUniformBuffer: GPUBuffer;
-    verticesBuffer: GPUBuffer;
-    mipTexture: GPUTexture;
+    vertexBuffer: GPUBuffer;
+    outputTexture: GPUTexture;
     volumeTexture: GPUTexture;
     sampler: GPUSampler;
 
@@ -43,12 +38,14 @@ export class VolumeRenderer {
     renderUniformData: Float32Array;
     computeUniformData: Float32Array;
 
+    blockDims = [8, 8];  // Must be same as workgroup size in compute shader
+
     constructor(volume, canvas, settings) {
         this.volume = volume;
         this.canvas = canvas;
-        this.settings = settings;
+        this.wWidth = settings.wWidth;
+        this.wLevel = settings.wLevel;
 
-        this.blockDims = [8, 8]; // Must be same as workgroup size in compute shader
         this.noWorkgroups = [Math.ceil(this.volume.width / this.blockDims[0]), Math.ceil(this.volume.height / this.blockDims[1])]
 
          this.computeUniformData = new Float32Array([
@@ -61,7 +58,7 @@ export class VolumeRenderer {
 
         this.renderUniformData = new Float32Array([
             // Window width and window level parameters
-            this.settings.width, this.settings.level
+            this.wWidth, this.wLevel
         ]);
     }
 
@@ -148,6 +145,23 @@ export class VolumeRenderer {
                 module: this.device.createShaderModule({ code: shader }),
                 entryPoint: 'vert_main',
                 buffers: [
+                        {
+                        arrayStride: projectionPlane.vertexSize,
+                        attributes: [
+                            {
+                                // Position
+                                shaderLocation: 0,
+                                offset: projectionPlane.positionOffset,
+                                format: 'float32x2',
+                            },
+                            {
+                                // UV
+                                shaderLocation: 1,
+                                offset: projectionPlane.UVOffset,
+                                format: 'float32x2',
+                            },
+                        ]
+                    } as GPUVertexBufferLayout
                 ]
             },
             fragment: {
@@ -177,7 +191,15 @@ export class VolumeRenderer {
         this.computeUniformBuffer = this.device.createBuffer({
             size: this.computeUniformData.byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        })
+        });
+
+        this.vertexBuffer = this.device.createBuffer({
+            size: projectionPlane.vertices.byteLength,
+            usage: GPUBufferUsage.VERTEX,
+            mappedAtCreation: true
+        });
+        new Float32Array(this.vertexBuffer.getMappedRange()).set(projectionPlane.vertices);
+        this.vertexBuffer.unmap()
 
         this.sampler = this.device.createSampler({
             magFilter: 'linear',
@@ -192,7 +214,7 @@ export class VolumeRenderer {
             dimension: '3d'
         });
 
-        this.mipTexture = this.device.createTexture({
+        this.outputTexture = this.device.createTexture({
             size: [this.volume.width, this.volume.height],
             format: 'rgba16float',
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING
@@ -212,7 +234,7 @@ export class VolumeRenderer {
             layout: this.renderBindGroupLayout,
             entries: [
                 { binding: 0, resource: { buffer: this.renderUniformBuffer } },
-                { binding: 1, resource: this.mipTexture.createView() },
+                { binding: 1, resource: this.outputTexture.createView() },
                 { binding: 2, resource: this.sampler }
             ]
         });
@@ -222,7 +244,7 @@ export class VolumeRenderer {
             entries: [
                 { binding: 0, resource: { buffer: this.computeUniformBuffer } },
                 { binding: 1, resource: this.volumeTexture.createView() },
-                { binding: 2, resource: this.mipTexture.createView() }
+                { binding: 2, resource: this.outputTexture.createView() }
             ]
         })
 
@@ -237,8 +259,9 @@ export class VolumeRenderer {
     }
 
     public updateSettings(settings) {
-        this.settings = settings;
-        this.renderUniformData = new Float32Array([this.settings.width, this.settings.level]);
+        this.wWidth = settings.wWidth;
+        this.wLevel = settings.wLevel;
+        this.renderUniformData = new Float32Array([this.wWidth, this.wLevel]);
         this.queue.writeBuffer(this.renderUniformBuffer, 0, this.renderUniformData);
     }
 
@@ -255,7 +278,8 @@ export class VolumeRenderer {
         const passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
         passEncoder.setPipeline(this.renderPipeline);
         passEncoder.setBindGroup(0, this.renderBindGroup);
-        passEncoder.draw(6);
+        passEncoder.setVertexBuffer(0, this.vertexBuffer);
+        passEncoder.draw(projectionPlane.vertexCount);
         passEncoder.end();
     }
 
