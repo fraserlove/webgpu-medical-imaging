@@ -4,16 +4,13 @@ import { VolumeRenderer } from './renderer';
 var settings = {
     wWidth: 1000.0/65535.0,
     wLevel: 0.498
-}
+};
 
 async function main() {
 
     const volume = await new Volume();
+    const volumeRenderer = new VolumeRenderer(volume, settings);
 
-    const canvas = document.createElement('canvas');
-    document.body.appendChild(canvas);
-
-    const volumeRenderer = new VolumeRenderer(volume, canvas, settings);
     await volumeRenderer.start();
     
     const run = () => {

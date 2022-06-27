@@ -43,12 +43,13 @@ export class VolumeRenderer {
 
     blockDims = [8, 8];  // Must be same as workgroup size in compute shader
 
-    constructor(volume, canvas, settings) {
+    constructor(volume, settings) {
         this.volume = volume;
 
-        this.canvas = canvas;
+        this.canvas = document.createElement('canvas');
         this.canvas.width = volume.width;
         this.canvas.height = volume.height;
+        document.body.appendChild(this.canvas);
         
         this.wWidth = settings.wWidth;
         this.wLevel = settings.wLevel;
@@ -297,13 +298,12 @@ export class VolumeRenderer {
     }
 
     public render() {
-        //console.log('Executing Pipelines...');
         this.commandEncoder = this.device.createCommandEncoder();
         this.executeComputePipeline();
         this.executeRenderPipeline();
         this.queue.submit([this.commandEncoder.finish()]);
 
-        this.rotate(0.002, 0.002, -0.002);
+        this.rotate(0.002, 0.0, 0.0);
 
     }
 

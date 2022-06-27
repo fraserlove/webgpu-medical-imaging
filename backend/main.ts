@@ -73,7 +73,7 @@ app.get('/volume', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    return res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
+    return res.sendFile(path.join(__dirname, '../../frontend/index.html'));
 });
 
 app.listen(port);
