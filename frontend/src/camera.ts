@@ -1,52 +1,50 @@
 import { mat4, vec3 } from 'gl-matrix';
 
 export class Camera {
-    private x: number = 0;
-    private y: number = 0;
-    private z: number = 0;
-
-    private rotX: number = 0;
-    private rotY: number = 0;
-    private rotZ: number = 0;
-
-    private scaleX: number = 1;
-    private scaleY: number = 1;
-    private scaleZ: number = 1;
-
-    aspect: number = 16 / 9;
+    private position: vec3 = vec3.create();
+    private rotation: vec3 = vec3.create();
+    private scale: vec3 = vec3.fromValues(1, 1, 1);
 
     private view: mat4;
+    private projection: mat4;
+    private viewProjection: mat4;
 
-    constructor(aspect: number) {
-        this.aspect = aspect;
+    constructor() {
+        this.projection = mat4.create();
+        this.viewProjection = mat4.create();
+        this.CalculateVPMatrix();
+    }
+
+    private CalculateVPMatrix() {
         this.view = mat4.create();
+        mat4.translate(this.view, this.view, this.position);
+        mat4.rotateX(this.view, this.view, this.rotation[0]);
+        mat4.rotateY(this.view, this.view, this.rotation[1]);
+        mat4.rotateZ(this.view, this.view, this.rotation[2]);
+        mat4.scale(this.view, this.view, this.scale);
+        mat4.invert(this.view, this.view);
+        mat4.multiply(this.viewProjection, this.projection, this.view);
     }
 
-    public getViewMatrix() {
-        mat4.translate(this.view, this.view, vec3.fromValues(this.x, this.y, this.z));
-        mat4.rotateX(this.view, this.view, this.rotX);
-        mat4.rotateY(this.view, this.view, this.rotY);
-        mat4.rotateZ(this.view, this.view, this.rotZ);
-        mat4.scale(this.view, this.view, vec3.fromValues(this.scaleX, this.scaleY, this.scaleZ));
-        return this.view as Float32Array;
+    public getRotation() { return this.rotation; }
+    public getPosition() { return this.position; }
+    public getScale() { return this.scale; }
+    public getViewMatrix() { return this.view as Float32Array; }
+    public getProjectionMatrix() { return this.projection as Float32Array; }
+    public getViewProjectionMatrix() { return this.viewProjection as Float32Array; }
+
+    public setRotation(rx, ry, rz) {
+        this.rotation = vec3.fromValues(rx, ry, rz);
+        this.CalculateVPMatrix();
     }
 
-    public rotate(rotX, rotY, rotZ) {
-        this.rotX = rotX;
-        this.rotY = rotY;
-        this.rotZ = rotZ;
+    public setPosition(x, y, z) {
+        this.position = vec3.fromValues(x, y, z);
+        this.CalculateVPMatrix();
     }
 
-    public translate(dx, dy, dz) {
-        this.x = dx;
-        this.y = dy;
-        this.z = dz;
+    public setScale(sx, sy, sz) {
+        this.scale = vec3.fromValues(sx, sy, sz);
+        this.CalculateVPMatrix();
     }
-
-    public scale(sx, sy, sz) {
-        this.scaleX += sx;
-        this.scaleY += sy;
-        this.scaleZ += sz;
-    }
-
 }

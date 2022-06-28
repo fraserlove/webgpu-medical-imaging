@@ -52,7 +52,7 @@ export class VolumeRenderer {
         document.body.appendChild(this.canvas);
 
         let aspect = this.canvas.width / this.canvas.height
-        this.camera = new Camera(aspect);
+        this.camera = new Camera();
         
         this.wWidth = settings.wWidth;
         this.wLevel = settings.wLevel;
@@ -197,7 +197,7 @@ export class VolumeRenderer {
         });
 
         this.computeUniformBuffer = this.device.createBuffer({
-            size: this.camera.getViewMatrix().byteLength,
+            size: this.camera.getViewProjectionMatrix().byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
@@ -236,7 +236,7 @@ export class VolumeRenderer {
 
         this.queue.writeTexture({ texture: this.volumeTexture }, this.volume.data, imageDataLayout, this.volume.size());
         this.queue.writeBuffer(this.renderUniformBuffer, 0, this.renderUniformData);
-        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.camera.getViewMatrix());
+        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.camera.getViewProjectionMatrix());
        
         this.renderBindGroup = this.device.createBindGroup({
             layout: this.renderBindGroupLayout,
@@ -276,7 +276,7 @@ export class VolumeRenderer {
     private executeComputePipeline() {
         const passEncoder = this.commandEncoder.beginComputePass();
         passEncoder.setPipeline(this.computePipeline);
-        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.camera.getViewMatrix());
+        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.camera.getViewProjectionMatrix());
         passEncoder.setBindGroup(0, this.computeBindGroup);
         passEncoder.dispatchWorkgroups(this.noWorkgroups[0], this.noWorkgroups[1]);
         passEncoder.end();
@@ -299,7 +299,7 @@ export class VolumeRenderer {
         this.executeRenderPipeline();
         this.queue.submit([this.commandEncoder.finish()]);
 
-        this.camera.rotate(0.001, 0, 0);
+        this.camera.setRotation(Math.cos(Date.now() / 1000), 0, 0);
     }
 
 }
