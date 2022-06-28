@@ -1,12 +1,13 @@
 import { Volume } from './volume';
 import { projectionPlane } from './vertices';
+import { Camera } from './camera';
 import shader from '../shaders/shader.wgsl';
 import mip16 from '../shaders/mip16.wgsl';
 import mip8 from '../shaders/mip8.wgsl';
-import { mat4, vec3 } from 'gl-matrix';
 
 export class VolumeRenderer {
     volume: Volume;
+    camera: Camera;
 
     wWidth: number;
     wLevel: number;
@@ -39,7 +40,6 @@ export class VolumeRenderer {
     renderPassDescriptor: GPURenderPassDescriptor;
 
     renderUniformData: Float32Array;
-    transform: Float32Array;
 
     blockDims = [8, 8];  // Must be same as workgroup size in compute shader
 
@@ -50,13 +50,14 @@ export class VolumeRenderer {
         this.canvas.width = volume.width;
         this.canvas.height = volume.height;
         document.body.appendChild(this.canvas);
+
+        let aspect = this.canvas.width / this.canvas.height
+        this.camera = new Camera(aspect);
         
         this.wWidth = settings.wWidth;
         this.wLevel = settings.wLevel;
 
         this.noWorkgroups = [Math.ceil(this.volume.width / this.blockDims[0]), Math.ceil(this.volume.height / this.blockDims[1])]
-
-        this.transform = mat4.create() as Float32Array;
 
         this.renderUniformData = new Float32Array([
             // Window width and window level parameters
@@ -76,7 +77,6 @@ export class VolumeRenderer {
             this.createPipelines();
             console.log('Initialising Resources...');
             this.initResources();
-            this.centreVolume();
         }
         else {
             console.log('WebGPU support not detected.')
@@ -197,7 +197,7 @@ export class VolumeRenderer {
         });
 
         this.computeUniformBuffer = this.device.createBuffer({
-            size: this.transform.byteLength,
+            size: this.camera.getViewMatrix().byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
@@ -236,7 +236,7 @@ export class VolumeRenderer {
 
         this.queue.writeTexture({ texture: this.volumeTexture }, this.volume.data, imageDataLayout, this.volume.size());
         this.queue.writeBuffer(this.renderUniformBuffer, 0, this.renderUniformData);
-        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.transform);
+        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.camera.getViewMatrix());
        
         this.renderBindGroup = this.device.createBindGroup({
             layout: this.renderBindGroupLayout,
@@ -273,13 +273,10 @@ export class VolumeRenderer {
         this.queue.writeBuffer(this.renderUniformBuffer, 0, this.renderUniformData);
     }
 
-    private centreVolume() {
-        this.translate(this.volume.width / 2, this.volume.height / 2, this.volume.depth / 2);
-    }
-
     private executeComputePipeline() {
         const passEncoder = this.commandEncoder.beginComputePass();
         passEncoder.setPipeline(this.computePipeline);
+        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.camera.getViewMatrix());
         passEncoder.setBindGroup(0, this.computeBindGroup);
         passEncoder.dispatchWorkgroups(this.noWorkgroups[0], this.noWorkgroups[1]);
         passEncoder.end();
@@ -295,23 +292,6 @@ export class VolumeRenderer {
         passEncoder.end();
     }
 
-    private rotate(rotX, rotY, rotZ) {
-        mat4.rotateX(this.transform, this.transform, rotX);
-        mat4.rotateY(this.transform, this.transform, rotY);
-        mat4.rotateZ(this.transform, this.transform, rotZ);
-        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.transform);
-    }
-
-    private translate(dx, dy, dz) {
-        mat4.translate(this.transform, this.transform, vec3.fromValues(dx, dy, dz));
-        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.transform);
-    }
-
-    private scale(sx, sy, sz) {
-        mat4.scale(this.transform, this.transform, vec3.fromValues(sx, sy, sz));
-        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.transform);
-    }
-
     public render() {
         console.log('Executing compute and render pipelines...');
         this.commandEncoder = this.device.createCommandEncoder();
@@ -319,12 +299,7 @@ export class VolumeRenderer {
         this.executeRenderPipeline();
         this.queue.submit([this.commandEncoder.finish()]);
 
-        console.log(this.transform);
-        //this.scale(0.99, 0.99, 1.0);
-        //this.translate(this.volume.width / 2, this.volume.height / 2, 0);
-        this.rotate(0.02, 0.0, 0.0);
-        console.log(this.transform);
-
+        this.camera.rotate(0.001, 0, 0);
     }
 
 }
