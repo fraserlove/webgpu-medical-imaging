@@ -3,7 +3,7 @@ import { projectionPlane } from './vertices';
 import shader from '../shaders/shader.wgsl';
 import mip16 from '../shaders/mip16.wgsl';
 import mip8 from '../shaders/mip8.wgsl';
-import { mat4 } from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 
 export class VolumeRenderer {
     volume: Volume;
@@ -76,6 +76,7 @@ export class VolumeRenderer {
             this.createPipelines();
             console.log('Initialising Resources...');
             this.initResources();
+            this.centreVolume();
         }
         else {
             console.log('WebGPU support not detected.')
@@ -272,6 +273,10 @@ export class VolumeRenderer {
         this.queue.writeBuffer(this.renderUniformBuffer, 0, this.renderUniformData);
     }
 
+    private centreVolume() {
+        this.translate(this.volume.width / 2, this.volume.height / 2, this.volume.depth / 2);
+    }
+
     private executeComputePipeline() {
         const passEncoder = this.commandEncoder.beginComputePass();
         passEncoder.setPipeline(this.computePipeline);
@@ -297,13 +302,28 @@ export class VolumeRenderer {
         this.queue.writeBuffer(this.computeUniformBuffer, 0, this.transform);
     }
 
+    private translate(dx, dy, dz) {
+        mat4.translate(this.transform, this.transform, vec3.fromValues(dx, dy, dz));
+        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.transform);
+    }
+
+    private scale(sx, sy, sz) {
+        mat4.scale(this.transform, this.transform, vec3.fromValues(sx, sy, sz));
+        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.transform);
+    }
+
     public render() {
+        console.log('Executing compute and render pipelines...');
         this.commandEncoder = this.device.createCommandEncoder();
         this.executeComputePipeline();
         this.executeRenderPipeline();
         this.queue.submit([this.commandEncoder.finish()]);
 
-        this.rotate(0.002, 0.0, 0.0);
+        console.log(this.transform);
+        //this.scale(0.99, 0.99, 1.0);
+        //this.translate(this.volume.width / 2, this.volume.height / 2, 0);
+        this.rotate(0.02, 0.0, 0.0);
+        console.log(this.transform);
 
     }
 
