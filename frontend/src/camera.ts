@@ -1,50 +1,71 @@
 import { mat4, vec3 } from 'gl-matrix';
 
 export class Camera {
-    private position: vec3 = vec3.create();
-    private rotation: vec3 = vec3.create();
-    private scale: vec3 = vec3.fromValues(1, 1, 1);
+    private viewDirection: vec3 = vec3.fromValues(0, 0, 1); // Vector pointing towards volume
+    private viewUp: vec3 = vec3.fromValues(0, 1, 0);
+    private viewSide: vec3 = vec3.fromValues(1, 0, 0);
+    private imageSpacePanCine: vec3 = vec3.create();
 
-    private view: mat4;
-    private projection: mat4;
-    private viewProjection: mat4;
+    private imageBoundingBox: vec3;
+    private boundingBox: vec3;
+    private scale: vec3;
 
-    constructor() {
-        this.projection = mat4.create();
-        this.viewProjection = mat4.create();
-        this.CalculateVPMatrix();
+    private camera: mat4 = mat4.create();
+    private view: mat4 = mat4.create();
+
+    private boundingBoxScale: number;
+
+    constructor(imageWidth, imageHeight, boundingBox) {
+        this.imageBoundingBox = vec3.fromValues(imageWidth, imageHeight, 0);
+        this.boundingBox = vec3.fromValues(boundingBox[0], boundingBox[1], boundingBox[2]);
+        this.boundingBoxScale = this.imageBoundingBox[0] / this.boundingBox[0];
+        this.scale = vec3.fromValues(this.boundingBoxScale, this.boundingBoxScale, 1);
     }
 
-    private CalculateVPMatrix() {
-        this.view = mat4.create();
-        mat4.translate(this.view, this.view, this.position);
-        mat4.rotateX(this.view, this.view, this.rotation[0]);
-        mat4.rotateY(this.view, this.view, this.rotation[1]);
-        mat4.rotateZ(this.view, this.view, this.rotation[2]);
-        mat4.scale(this.view, this.view, this.scale);
-        mat4.invert(this.view, this.view);
-        mat4.multiply(this.viewProjection, this.projection, this.view);
+    private CalculateViewMatrix() {
+        this.camera = mat4.create();
+
+        let viewBasisMatrix: mat4 = mat4.fromValues(
+            this.viewSide[0], this.viewSide[1], this.viewSide[2], 0,
+            this.viewUp[0], this.viewUp[1], this.viewUp[2], 0,
+            this.viewDirection[0], this.viewDirection[1], this.viewDirection[2], 0,
+            0, 0, 0, 1
+        )
+
+        // Centre volume
+        mat4.multiply(this.camera, this.camera, mat4.fromTranslation(mat4.create(), this.boundingBoxCentre()));
+        // Apply rotation
+        mat4.multiply(this.camera, this.camera, viewBasisMatrix);
+        // Apply cine-pan transformation
+        mat4.multiply(this.camera, this.camera, mat4.fromTranslation(mat4.create(), this.imageSpacePanCine));
+        // Apply scaling transformation
+        mat4.multiply(this.camera, this.camera, mat4.fromScaling(mat4.create(), this.scale));
+        // Re-centre the image in the window
+        mat4.multiply(this.camera, this.camera, mat4.fromTranslation(mat4.create(), this.imageCentre()));
+        mat4.invert(this.view, this.camera);
     }
 
-    public getRotation() { return this.rotation; }
-    public getPosition() { return this.position; }
-    public getScale() { return this.scale; }
-    public getViewMatrix() { return this.view as Float32Array; }
-    public getProjectionMatrix() { return this.projection as Float32Array; }
-    public getViewProjectionMatrix() { return this.viewProjection as Float32Array; }
+    public getCameraMatrix() { this.CalculateViewMatrix(); return this.camera as Float32Array; }
+    public getViewMatrix() { this.CalculateViewMatrix(); return this.view as Float32Array; }
 
-    public setRotation(rx, ry, rz) {
-        this.rotation = vec3.fromValues(rx, ry, rz);
-        this.CalculateVPMatrix();
+    private boundingBoxCentre() {
+        return vec3.fromValues(-this.boundingBox[0] / 2, -this.boundingBox[1] / 2, -this.boundingBox[2] / 2);
     }
 
-    public setPosition(x, y, z) {
-        this.position = vec3.fromValues(x, y, z);
-        this.CalculateVPMatrix();
+    private imageCentre() {
+        return vec3.fromValues(this.boundingBox[0] / this.scale[0] - this.boundingBox[0] / 2, this.boundingBox[1] / this.scale[1] - this.boundingBox[1] / 2, 0);
     }
 
-    public setScale(sx, sy, sz) {
-        this.scale = vec3.fromValues(sx, sy, sz);
-        this.CalculateVPMatrix();
+    public setScale(s) {
+        this.scale = vec3.fromValues(s, s, 1);
+        vec3.multiply(this.scale, this.scale, vec3.fromValues(this.boundingBoxScale, this.boundingBoxScale, 1));
+    }
+
+    public setViewDirection(viewDirection: vec3, viewUp: vec3) {
+        let viewSide: vec3 = vec3.create();
+        vec3.cross(viewSide, viewDirection, viewUp);
+        vec3.cross(this.viewUp, viewDirection, viewSide);
+        this.viewDirection = viewDirection;
+        this.viewSide = viewSide;
     }
 }

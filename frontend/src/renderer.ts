@@ -1,6 +1,7 @@
 import { Volume } from './volume';
 import { projectionPlane } from './vertices';
 import { Camera } from './camera';
+import { mat4, vec3 } from 'gl-matrix';
 import shader from '../shaders/shader.wgsl';
 import mip16 from '../shaders/mip16.wgsl';
 import mip8 from '../shaders/mip8.wgsl';
@@ -51,8 +52,7 @@ export class VolumeRenderer {
         this.canvas.height = volume.height;
         document.body.appendChild(this.canvas);
 
-        let aspect = this.canvas.width / this.canvas.height
-        this.camera = new Camera();
+        this.camera = new Camera(this.canvas.width, this.canvas.height, this.volume.boundingBox);
         
         this.wWidth = settings.wWidth;
         this.wLevel = settings.wLevel;
@@ -197,7 +197,7 @@ export class VolumeRenderer {
         });
 
         this.computeUniformBuffer = this.device.createBuffer({
-            size: this.camera.getViewProjectionMatrix().byteLength,
+            size: this.camera.getViewMatrix().byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
@@ -236,7 +236,7 @@ export class VolumeRenderer {
 
         this.queue.writeTexture({ texture: this.volumeTexture }, this.volume.data, imageDataLayout, this.volume.size());
         this.queue.writeBuffer(this.renderUniformBuffer, 0, this.renderUniformData);
-        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.camera.getViewProjectionMatrix());
+        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.camera.getViewMatrix());
        
         this.renderBindGroup = this.device.createBindGroup({
             layout: this.renderBindGroupLayout,
@@ -276,7 +276,7 @@ export class VolumeRenderer {
     private executeComputePipeline() {
         const passEncoder = this.commandEncoder.beginComputePass();
         passEncoder.setPipeline(this.computePipeline);
-        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.camera.getViewProjectionMatrix());
+        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.camera.getViewMatrix());
         passEncoder.setBindGroup(0, this.computeBindGroup);
         passEncoder.dispatchWorkgroups(this.noWorkgroups[0], this.noWorkgroups[1]);
         passEncoder.end();
@@ -299,7 +299,7 @@ export class VolumeRenderer {
         this.executeRenderPipeline();
         this.queue.submit([this.commandEncoder.finish()]);
 
-        this.camera.setRotation(Math.cos(Date.now() / 1000), 0, 0);
+        this.camera.setViewDirection(vec3.fromValues(0, 0, 1), vec3.fromValues(0, -1, 0));
     }
 
 }
