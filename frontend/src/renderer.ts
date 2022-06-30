@@ -1,7 +1,7 @@
 import { Volume } from './volume';
 import { projectionPlane } from './vertices';
 import { Camera } from './camera';
-import { mat4, vec3 } from 'gl-matrix';
+import { vec3 } from 'gl-matrix';
 import shader from '../shaders/shader.wgsl';
 import mip16 from '../shaders/mip16.wgsl';
 import mip8 from '../shaders/mip8.wgsl';
@@ -197,7 +197,7 @@ export class VolumeRenderer {
         });
 
         this.computeUniformBuffer = this.device.createBuffer({
-            size: this.camera.getViewMatrix().byteLength,
+            size: this.camera.getViewMatrixByteLength(),
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
@@ -294,12 +294,12 @@ export class VolumeRenderer {
 
     public render() {
         console.log('Executing compute and render pipelines...');
+
+        this.camera.setViewDirection(vec3.fromValues(1, 0, 0), vec3.fromValues(0, -1, 0));
+
         this.commandEncoder = this.device.createCommandEncoder();
         this.executeComputePipeline();
         this.executeRenderPipeline();
         this.queue.submit([this.commandEncoder.finish()]);
-
-        this.camera.setViewDirection(vec3.fromValues(0, 0, 1), vec3.fromValues(0, -1, 0));
     }
-
 }
