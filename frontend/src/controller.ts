@@ -8,13 +8,16 @@ export class Controller {
     down: boolean;
     right: boolean;
     left: boolean;
+    forward: boolean;
+    back: boolean;
 
     zoomFactor: number = 400;
     dragFactor: number = 100;
     panFactor: number = 2;
+    cineFactor: number = 1;
 
     constructor(renderer: VolumeRenderer) {
-        this.up = this.down = this.right = this.left = false;
+        this.up = this.down = this.right = this.left = this.forward = this.back = false;
         this.mouseDown = false;
         this.renderer = renderer;
         this.initPos = [0, 0];
@@ -25,7 +28,7 @@ export class Controller {
     private initMouse() {
         // Mouse zoom
         document.addEventListener('wheel', (e : WheelEvent) => {
-            this.renderer.camera.scaleView(e.deltaY / this.zoomFactor);
+            this.renderer.camera.updateScale(e.deltaY / this.zoomFactor);
         }, false);
 
         // Mouse drag
@@ -41,7 +44,7 @@ export class Controller {
                 if (this.initPos[0] > 0 && this.initPos[1] > 0) {
                     const dx = e.pageX - this.initPos[0];
                     const dy = e.pageY - this.initPos[1];
-                    this.renderer.camera.rotateView(-dx / this.dragFactor, dy / this.dragFactor);
+                    this.renderer.camera.updateRotation(-dx / this.dragFactor, dy / this.dragFactor);
                 }
                 this.initPos = [e.pageX, e.pageY];
             }
@@ -56,6 +59,8 @@ export class Controller {
                 case 'a': this.left = true; break;
                 case 's': this.down = true; break;
                 case 'd': this.right = true; break;
+                case 'q': this.forward = true; break;
+                case 'e': this.back = true; break;
             }
         }, false);
         document.addEventListener('keyup', (e : KeyboardEvent) => {
@@ -64,14 +69,18 @@ export class Controller {
                 case 'a': this.left = false; break;
                 case 's': this.down = false; break;
                 case 'd': this.right = false; break;
+                case 'q': this.forward = false; break;
+                case 'e': this.back = false; break;
             }
         }, false);
     }
 
     public getInput() {
-        if (this.up) this.renderer.camera.panView(0, -this.panFactor);
-        if (this.down) this.renderer.camera.panView(0, this.panFactor);
-        if (this.left) this.renderer.camera.panView(-this.panFactor, 0);
-        if (this.right) this.renderer.camera.panView(this.panFactor, 0);
+        if (this.up) this.renderer.camera.updatePan(0, -this.panFactor);
+        if (this.down) this.renderer.camera.updatePan(0, this.panFactor);
+        if (this.left) this.renderer.camera.updatePan(-this.panFactor, 0);
+        if (this.right) this.renderer.camera.updatePan(this.panFactor, 0);
+        if (this.forward) this.renderer.camera.updateCine(this.cineFactor);
+        if (this.back) this.renderer.camera.updateCine(-this.cineFactor);
     }
 }

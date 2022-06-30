@@ -1,9 +1,9 @@
 import { mat4, vec3 } from 'gl-matrix';
 
 export class Camera {
-    private viewDirection: vec3 = vec3.create(); // Vector pointing towards volume
-    private viewUp: vec3 = vec3.create();
-    private viewSide: vec3 = vec3.create();
+    private viewDirection: vec3 = vec3.create(); // Points towards volume - z-axis for camera
+    private viewUp: vec3 = vec3.create(); // Points upwards from top of camera - x-axis for camera
+    private viewSide: vec3 = vec3.create(); // Points parallel to image plane - y-axis for camera
     private imageSpacePanCine: vec3 = vec3.create();
 
     private imageBoundingBox: vec3;
@@ -21,7 +21,8 @@ export class Camera {
         this.boundingBoxScale = this.imageBoundingBox[0] / this.boundingBox[0];
 
         this.setScale(this.boundingBoxScale);
-        //this.setViewDirection(vec3.fromValues(0, 0, 1), vec3.fromValues(0, -1, 0));
+        // TODO: Value of 600 (half of volume.depth) works best (need to find out why?)
+        this.setPanCine(0, 0, 600);
         this.setViewDirection(vec3.fromValues(1, 0, 0), vec3.fromValues(0, -1, 0));
     }
 
@@ -73,18 +74,27 @@ export class Camera {
         this.viewSide = viewSide;
     }
 
-    public panView(dx: number, dy: number) {
+    private setPanCine(x: number, y: number, z: number) {
+        this.imageSpacePanCine = vec3.fromValues(x, y, z);
+    }
+
+    public updateCine(dz: number) {
+        console.log(this.imageSpacePanCine[2]);
+        this.imageSpacePanCine[2] += dz;
+    }
+
+    public updatePan(dx: number, dy: number) {
         // Adjust dx and dy to scale
         this.imageSpacePanCine[0] += dx / this.scale[0];
         this.imageSpacePanCine[1] += dy / this.scale[1];
     }
 
-    public scaleView(ds: number) {
+    public updateScale(ds: number) {
         this.scale[0] += ds;
         this.scale[1] += ds;
     }
 
-    public rotateView(dx: number, dy: number) {
+    public updateRotation(dx: number, dy: number) {
         vec3.transformMat4(this.viewDirection, this.viewDirection, mat4.fromRotation(mat4.create(), dx, this.viewUp));
         vec3.transformMat4(this.viewSide, this.viewSide, mat4.fromRotation(mat4.create(), dx, this.viewUp));
         vec3.transformMat4(this.viewDirection, this.viewDirection, mat4.fromRotation(mat4.create(), dy, this.viewSide));
