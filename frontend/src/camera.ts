@@ -74,8 +74,9 @@ export class Camera {
     }
 
     public panView(dx: number, dy: number) {
-        this.imageSpacePanCine[0] += dx;
-        this.imageSpacePanCine[1] += dy;
+        // Adjust dx and dy to scale
+        this.imageSpacePanCine[0] += dx / this.scale[0];
+        this.imageSpacePanCine[1] += dy / this.scale[1];
     }
 
     public scaleView(ds: number) {

@@ -11,7 +11,7 @@ export class Controller {
 
     zoomFactor: number = 400;
     dragFactor: number = 100;
-    panFactor: number = 1;
+    panFactor: number = 2;
 
     constructor(renderer: VolumeRenderer) {
         this.up = this.down = this.right = this.left = false;
