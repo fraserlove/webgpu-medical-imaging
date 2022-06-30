@@ -1,35 +1,42 @@
-import { Camera } from "./camera";
 import { VolumeRenderer } from "./renderer";
 
 export class Controller {
     renderer: VolumeRenderer;
     mouseDown: boolean;
     initPos: [number, number];
+    up: boolean;
+    down: boolean;
+    right: boolean;
+    left: boolean;
 
     zoomFactor: number = 400;
     dragFactor: number = 100;
+    panFactor: number = 1;
 
     constructor(renderer: VolumeRenderer) {
-        this.renderer = renderer;
+        this.up = this.down = this.right = this.left = false;
         this.mouseDown = false;
+        this.renderer = renderer;
         this.initPos = [0, 0];
         this.initMouse();
+        this.initKeyboard();
     }
 
-    initMouse() {
+    private initMouse() {
         // Mouse zoom
-        this.renderer.canvas.onwheel = (e: WheelEvent) => {
-            this.renderer.camera.updateScale(e.deltaY / this.zoomFactor);
-        }
+        document.addEventListener('wheel', (e : WheelEvent) => {
+            this.renderer.camera.scaleView(e.deltaY / this.zoomFactor);
+        }, false);
+
         // Mouse drag
-        this.renderer.canvas.onmousedown = (e: MouseEvent) => {
+        document.addEventListener('mousedown', (e: MouseEvent) => {
             this.mouseDown = true;
             this.initPos = [e.pageX, e.pageY]
-        }
-        this.renderer.canvas.onmouseup = (e: MouseEvent) => {
+        }, false);
+        document.addEventListener('mouseup', (e: MouseEvent) => {
             this.mouseDown = false;
-        }
-        this.renderer.canvas.onmousemove = (e: MouseEvent) => {
+        }, false);
+        document.addEventListener('mousemove', (e: MouseEvent) => {
             if (this.mouseDown) {
                 if (this.initPos[0] > 0 && this.initPos[1] > 0) {
                     const dx = e.pageX - this.initPos[0];
@@ -38,6 +45,33 @@ export class Controller {
                 }
                 this.initPos = [e.pageX, e.pageY];
             }
-        }
+        }, false);
+    }
+
+    private initKeyboard() {
+        // WASD controls
+        document.addEventListener('keydown', (e : KeyboardEvent) => {
+            switch(e.key) {
+                case 'w': this.up = true; break;
+                case 'a': this.left = true; break;
+                case 's': this.down = true; break;
+                case 'd': this.right = true; break;
+            }
+        }, false);
+        document.addEventListener('keyup', (e : KeyboardEvent) => {
+            switch(e.key) {
+                case 'w': this.up = false; break;
+                case 'a': this.left = false; break;
+                case 's': this.down = false; break;
+                case 'd': this.right = false; break;
+            }
+        }, false);
+    }
+
+    public getInput() {
+        if (this.up) this.renderer.camera.panView(0, -this.panFactor);
+        if (this.down) this.renderer.camera.panView(0, this.panFactor);
+        if (this.left) this.renderer.camera.panView(-this.panFactor, 0);
+        if (this.right) this.renderer.camera.panView(this.panFactor, 0);
     }
 }

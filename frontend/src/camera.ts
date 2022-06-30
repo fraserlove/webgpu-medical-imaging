@@ -60,12 +60,7 @@ export class Camera {
         return vec3.fromValues(this.boundingBox[0] / 2, this.boundingBox[1] / 2, 0);
     }
 
-    public updateScale(s: number) {
-        this.scale[0] += s;
-        this.scale[1] += s;
-    }
-
-    public setScale(s: number) {
+    private setScale(s: number) {
         this.scale = vec3.fromValues(s, s, 1);
         vec3.multiply(this.scale, this.scale, vec3.fromValues(this.boundingBoxScale, this.boundingBoxScale, 1));
     }
@@ -76,6 +71,16 @@ export class Camera {
         vec3.cross(this.viewUp, viewDirection, viewSide);
         this.viewDirection = viewDirection;
         this.viewSide = viewSide;
+    }
+
+    public panView(dx: number, dy: number) {
+        this.imageSpacePanCine[0] += dx;
+        this.imageSpacePanCine[1] += dy;
+    }
+
+    public scaleView(ds: number) {
+        this.scale[0] += ds;
+        this.scale[1] += ds;
     }
 
     public rotateView(dx: number, dy: number) {

@@ -52,7 +52,6 @@ export class VolumeRenderer {
         document.body.appendChild(this.canvas);
 
         this.camera = new Camera(this.canvas.width, this.canvas.height, this.volume.boundingBox);
-        this.camera.setScale(0.5);
         
         this.wWidth = settings.wWidth;
         this.wLevel = settings.wLevel;
