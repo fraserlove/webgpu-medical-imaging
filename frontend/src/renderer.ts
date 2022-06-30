@@ -52,6 +52,7 @@ export class VolumeRenderer {
         document.body.appendChild(this.canvas);
 
         this.camera = new Camera(this.canvas.width, this.canvas.height, this.volume.boundingBox);
+        this.camera.setScale(0.5);
         
         this.wWidth = settings.wWidth;
         this.wLevel = settings.wLevel;
@@ -292,8 +293,6 @@ export class VolumeRenderer {
     }
 
     public render() {
-        console.log('Executing compute and render pipelines...');
-
         this.commandEncoder = this.device.createCommandEncoder();
         this.executeComputePipeline();
         this.executeRenderPipeline();

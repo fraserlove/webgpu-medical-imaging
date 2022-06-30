@@ -36,7 +36,7 @@ export class Camera {
         )
 
         // Centre volume
-        mat4.multiply(this.camera, this.camera, mat4.fromTranslation(mat4.create(), this.boundingBoxCentre()));
+        mat4.multiply(this.camera, mat4.fromTranslation(mat4.create(), this.boundingBoxCentre()), this.camera);
         // Apply rotation
         mat4.multiply(this.camera, viewBasisMatrix, this.camera);
         // Apply cine-pan transformation
@@ -50,14 +50,19 @@ export class Camera {
 
     public getCameraMatrix() { this.CalculateViewMatrix(); return this.camera as Float32Array; }
     public getViewMatrix() { this.CalculateViewMatrix(); return this.view as Float32Array; }
-    public getViewMatrixByteLength() { return (this.view as Float32Array).byteLength }
+    public getViewMatrixByteLength() { return (this.view as Float32Array).byteLength; }
 
     private boundingBoxCentre() {
         return vec3.fromValues(-this.boundingBox[0] / 2, -this.boundingBox[1] / 2, -this.boundingBox[2] / 2);
     }
 
     private imageCentre() {
-        return vec3.fromValues(this.boundingBox[0] / this.scale[0] - this.boundingBox[0] / 2, this.boundingBox[1] / this.scale[1] - this.boundingBox[1] / 2, 0);
+        return vec3.fromValues(this.boundingBox[0] / 2, this.boundingBox[1] / 2, 0);
+    }
+
+    public updateScale(s: number) {
+        this.scale[0] += s;
+        this.scale[1] += s;
     }
 
     public setScale(s: number) {
