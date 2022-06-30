@@ -15,13 +15,14 @@ export class Camera {
 
     private boundingBoxScale: number;
 
-    constructor(imageWidth, imageHeight, boundingBox) {
+    constructor(imageWidth: number, imageHeight: number, boundingBox: number[]) {
         this.imageBoundingBox = vec3.fromValues(imageWidth, imageHeight, 0);
         this.boundingBox = vec3.fromValues(boundingBox[0], boundingBox[1], boundingBox[2]);
         this.boundingBoxScale = this.imageBoundingBox[0] / this.boundingBox[0];
 
         this.setScale(this.boundingBoxScale);
-        this.setViewDirection(vec3.fromValues(0, 0, 1), vec3.fromValues(0, -1, 0));
+        //this.setViewDirection(vec3.fromValues(0, 0, 1), vec3.fromValues(0, -1, 0));
+        this.setViewDirection(vec3.fromValues(1, 0, 0), vec3.fromValues(0, -1, 0));
     }
 
     private CalculateViewMatrix() {
@@ -59,16 +60,23 @@ export class Camera {
         return vec3.fromValues(this.boundingBox[0] / this.scale[0] - this.boundingBox[0] / 2, this.boundingBox[1] / this.scale[1] - this.boundingBox[1] / 2, 0);
     }
 
-    public setScale(s) {
+    public setScale(s: number) {
         this.scale = vec3.fromValues(s, s, 1);
         vec3.multiply(this.scale, this.scale, vec3.fromValues(this.boundingBoxScale, this.boundingBoxScale, 1));
     }
 
-    public setViewDirection(viewDirection: vec3, viewUp: vec3) {
+    private setViewDirection(viewDirection: vec3, viewUp: vec3) {
         let viewSide: vec3 = vec3.create();
         vec3.cross(viewSide, viewDirection, viewUp);
         vec3.cross(this.viewUp, viewDirection, viewSide);
         this.viewDirection = viewDirection;
         this.viewSide = viewSide;
+    }
+
+    public rotateView(dx: number, dy: number) {
+        vec3.transformMat4(this.viewDirection, this.viewDirection, mat4.fromRotation(mat4.create(), dx, this.viewUp));
+        vec3.transformMat4(this.viewSide, this.viewSide, mat4.fromRotation(mat4.create(), dx, this.viewUp));
+        vec3.transformMat4(this.viewDirection, this.viewDirection, mat4.fromRotation(mat4.create(), dy, this.viewSide));
+        vec3.transformMat4(this.viewUp, this.viewUp, mat4.fromRotation(mat4.create(), dy, this.viewSide));
     }
 }
