@@ -21,8 +21,7 @@ export class Camera {
         this.boundingBoxScale = this.imageBoundingBox[0] / this.boundingBox[0];
 
         this.setScale(this.boundingBoxScale);
-        // TODO: Value of 600 (half of volume.depth) works best (need to find out why?)
-        this.setPanCine(0, 0, 600);
+        this.setPanCine(0, 0, this.boundingBox[2] / 2);
         this.setViewDirection(vec3.fromValues(1, 0, 0), vec3.fromValues(0, -1, 0));
     }
 
@@ -62,8 +61,10 @@ export class Camera {
     }
 
     private setScale(s: number) {
-        this.scale = vec3.fromValues(s, s, 1);
-        vec3.multiply(this.scale, this.scale, vec3.fromValues(this.boundingBoxScale, this.boundingBoxScale, 1));
+        if (s > 0) {
+            this.scale = vec3.fromValues(s, s, 1);
+            vec3.multiply(this.scale, this.scale, vec3.fromValues(this.boundingBoxScale, this.boundingBoxScale, 1));
+        }
     }
 
     private setViewDirection(viewDirection: vec3, viewUp: vec3) {
@@ -90,8 +91,10 @@ export class Camera {
     }
 
     public updateScale(ds: number) {
-        this.scale[0] += ds;
-        this.scale[1] += ds;
+        if (this.scale[0] + ds > 0) {
+            this.scale[0] += ds;
+            this.scale[1] += ds;
+        }
     }
 
     public updateRotation(dx: number, dy: number) {

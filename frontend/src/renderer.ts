@@ -51,7 +51,8 @@ export class VolumeRenderer {
         this.canvas.height = volume.height;
         document.body.appendChild(this.canvas);
 
-        this.camera = new Camera(this.canvas.width, this.canvas.height, this.volume.boundingBox);
+        //Set last argument to this.volume.boundingBox when implemented correct scaling in z-axis
+        this.camera = new Camera(this.canvas.width, this.canvas.height, this.volume.size());
         
         this.wWidth = settings.wWidth;
         this.wLevel = settings.wLevel;

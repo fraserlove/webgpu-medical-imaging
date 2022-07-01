@@ -11,8 +11,8 @@ export class Controller {
     forward: boolean;
     back: boolean;
 
-    zoomFactor: number = 400;
-    dragFactor: number = 100;
+    scaleFactor: number = 1000;
+    rotationFactor: number = 100;
     panFactor: number = 2;
     cineFactor: number = 1;
 
@@ -28,7 +28,7 @@ export class Controller {
     private initMouse() {
         // Mouse zoom
         document.addEventListener('wheel', (e : WheelEvent) => {
-            this.renderer.camera.updateScale(e.deltaY / this.zoomFactor);
+            this.renderer.camera.updateScale(e.deltaY / this.scaleFactor);
         }, false);
 
         // Mouse drag
@@ -44,7 +44,7 @@ export class Controller {
                 if (this.initPos[0] > 0 && this.initPos[1] > 0) {
                     const dx = e.pageX - this.initPos[0];
                     const dy = e.pageY - this.initPos[1];
-                    this.renderer.camera.updateRotation(-dx / this.dragFactor, dy / this.dragFactor);
+                    this.renderer.camera.updateRotation(-dx / this.rotationFactor, dy / this.rotationFactor);
                 }
                 this.initPos = [e.pageX, e.pageY];
             }
