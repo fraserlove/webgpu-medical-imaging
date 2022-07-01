@@ -60,7 +60,7 @@ export class Camera {
     }
 
     private imageCentre() {
-        return vec3.fromValues(this.boundingBox[0] / 2, this.boundingBox[1] / 2, 0);
+        return vec3.fromValues(this.imageBoundingBox[0] / 2, this.imageBoundingBox[1] / 2, 0);
     }
 
     private setScale(s: number) {
@@ -114,4 +114,9 @@ export class Camera {
     public updateWLevel(dl: number) {
         this.wLevel += dl;
     }
+
+    /* public resize(width, height) {
+        this.imageBoundingBox = vec3.fromValues(width, height, 0);
+        this.boundingBoxScale = this.imageBoundingBox[0] / this.boundingBox[0];
+    } */
 }

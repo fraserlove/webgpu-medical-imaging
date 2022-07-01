@@ -1,3 +1,4 @@
+import { Camera } from "./camera";
 import { VolumeRenderer } from "./renderer";
 
 export class Controller {
@@ -29,6 +30,7 @@ export class Controller {
         this.mouseDown = false;
         this.renderer = renderer;
         this.initPos = [0, 0];
+        this.checkResize();
         this.initMouse();
         this.initKeyboard();
     }
@@ -89,6 +91,12 @@ export class Controller {
                 case 'ArrowRight': this.wLevelInc = false; break;
             }
         }, false);
+    }
+
+    private checkResize() {
+        window.onresize = () => {
+            // this.renderer.resizeCanvas(window.innerWidth, window.innerHeight);
+        }
     }
 
     public getInput() {

@@ -41,18 +41,18 @@ export class VolumeRenderer {
 
     blockDims = [8, 8];  // Must be same as workgroup size in compute shader
 
-    constructor(volume) {
+    constructor(volume, width, height) {
         this.volume = volume;
 
         this.canvas = document.createElement('canvas');
-        this.canvas.width = volume.width;
-        this.canvas.height = volume.height;
         document.body.appendChild(this.canvas);
+        this.canvas.width = width;
+        this.canvas.height = height;
 
         //Set last argument to this.volume.boundingBox when implemented correct scaling in z-axis
         this.camera = new Camera(this.canvas.width, this.canvas.height, this.volume.size());
 
-        this.noWorkgroups = [Math.ceil(this.volume.width / this.blockDims[0]), Math.ceil(this.volume.height / this.blockDims[1])]
+        this.noWorkgroups = [Math.ceil(this.canvas.width / this.blockDims[0]), Math.ceil(this.canvas.height / this.blockDims[1])]
 
         this.computeShader = mip16
         if (this.volume.bitsPerVoxel == 8)
@@ -72,6 +72,19 @@ export class VolumeRenderer {
             console.log('WebGPU support not detected.')
         }
     }
+
+    /* public resizeCanvas(width, height) {
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.camera.resize(this.canvas.width, this.canvas.height);
+        this.noWorkgroups = [Math.ceil(this.canvas.width / this.blockDims[0]), Math.ceil(this.canvas.height / this.blockDims[1])];
+
+        this.outputTexture = this.device.createTexture({
+            size: [this.canvas.width, this.canvas.height],
+            format: 'rgba16float',
+            usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING
+        });
+    } */
 
     private async initWebGPU(): Promise<boolean> {
         try {
