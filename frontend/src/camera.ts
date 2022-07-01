@@ -4,14 +4,17 @@ export class Camera {
     private viewDirection: vec3 = vec3.create(); // Points towards volume - z-axis for camera
     private viewUp: vec3 = vec3.create(); // Points upwards from top of camera - x-axis for camera
     private viewSide: vec3 = vec3.create(); // Points parallel to image plane - y-axis for camera
-    private imageSpacePanCine: vec3 = vec3.create();
 
+    private imageSpacePanCine: vec3;
     private imageBoundingBox: vec3;
     private boundingBox: vec3;
     private scale: vec3;
 
     private camera: mat4 = mat4.create();
     private view: mat4 = mat4.create();
+
+    private wWidth: number = 1000.0/65535.0;
+    private wLevel: number = 0.498;
 
     private boundingBoxScale: number;
 
@@ -50,7 +53,7 @@ export class Camera {
 
     public getCameraMatrix() { this.CalculateViewMatrix(); return this.camera as Float32Array; }
     public getViewMatrix() { this.CalculateViewMatrix(); return this.view as Float32Array; }
-    public getViewMatrixByteLength() { return (this.view as Float32Array).byteLength; }
+    public getWWidthLevel() { return new Float32Array([this.wWidth, this.wLevel]); }
 
     private boundingBoxCentre() {
         return vec3.fromValues(-this.boundingBox[0] / 2, -this.boundingBox[1] / 2, -this.boundingBox[2] / 2);
@@ -102,5 +105,13 @@ export class Camera {
         vec3.transformMat4(this.viewSide, this.viewSide, mat4.fromRotation(mat4.create(), dx, this.viewUp));
         vec3.transformMat4(this.viewDirection, this.viewDirection, mat4.fromRotation(mat4.create(), dy, this.viewSide));
         vec3.transformMat4(this.viewUp, this.viewUp, mat4.fromRotation(mat4.create(), dy, this.viewSide));
+    }
+
+    public updateWWidth(dw: number) {
+        this.wWidth += dw;
+    }
+
+    public updateWLevel(dl: number) {
+        this.wLevel += dl;
     }
 }

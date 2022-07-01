@@ -39,11 +39,9 @@ export class VolumeRenderer {
     commandEncoder: GPUCommandEncoder;
     renderPassDescriptor: GPURenderPassDescriptor;
 
-    renderUniformData: Float32Array;
-
     blockDims = [8, 8];  // Must be same as workgroup size in compute shader
 
-    constructor(volume, settings) {
+    constructor(volume) {
         this.volume = volume;
 
         this.canvas = document.createElement('canvas');
@@ -53,16 +51,8 @@ export class VolumeRenderer {
 
         //Set last argument to this.volume.boundingBox when implemented correct scaling in z-axis
         this.camera = new Camera(this.canvas.width, this.canvas.height, this.volume.size());
-        
-        this.wWidth = settings.wWidth;
-        this.wLevel = settings.wLevel;
 
         this.noWorkgroups = [Math.ceil(this.volume.width / this.blockDims[0]), Math.ceil(this.volume.height / this.blockDims[1])]
-
-        this.renderUniformData = new Float32Array([
-            // Window width and window level parameters
-            this.wWidth, this.wLevel
-        ]);
 
         this.computeShader = mip16
         if (this.volume.bitsPerVoxel == 8)
@@ -192,12 +182,12 @@ export class VolumeRenderer {
 
     private initResources() {
         this.renderUniformBuffer = this.device.createBuffer({
-            size: this.renderUniformData.byteLength,
+            size: this.camera.getWWidthLevel().byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
         this.computeUniformBuffer = this.device.createBuffer({
-            size: this.camera.getViewMatrixByteLength(),
+            size: this.camera.getViewMatrix().byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
@@ -235,7 +225,7 @@ export class VolumeRenderer {
         };
 
         this.queue.writeTexture({ texture: this.volumeTexture }, this.volume.data, imageDataLayout, this.volume.size());
-        this.queue.writeBuffer(this.renderUniformBuffer, 0, this.renderUniformData);
+        this.queue.writeBuffer(this.renderUniformBuffer, 0, this.camera.getWWidthLevel());
         this.queue.writeBuffer(this.computeUniformBuffer, 0, this.camera.getViewMatrix());
        
         this.renderBindGroup = this.device.createBindGroup({
@@ -266,13 +256,6 @@ export class VolumeRenderer {
         }
     }
 
-    public updateSettings(settings) {
-        this.wWidth = settings.wWidth;
-        this.wLevel = settings.wLevel;
-        this.renderUniformData = new Float32Array([this.wWidth, this.wLevel]);
-        this.queue.writeBuffer(this.renderUniformBuffer, 0, this.renderUniformData);
-    }
-
     private executeComputePipeline() {
         const passEncoder = this.commandEncoder.beginComputePass();
         passEncoder.setPipeline(this.computePipeline);
@@ -286,6 +269,7 @@ export class VolumeRenderer {
         this.renderPassDescriptor.colorAttachments[0].view = this.context.getCurrentTexture().createView();
         const passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
         passEncoder.setPipeline(this.renderPipeline);
+        this.queue.writeBuffer(this.renderUniformBuffer, 0, this.camera.getWWidthLevel());
         passEncoder.setBindGroup(0, this.renderBindGroup);
         passEncoder.setVertexBuffer(0, this.vertexBuffer);
         passEncoder.draw(projectionPlane.vertexCount);
