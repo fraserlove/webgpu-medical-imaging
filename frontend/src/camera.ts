@@ -83,7 +83,6 @@ export class Camera {
     }
 
     public updateCine(dz: number) {
-        console.log(this.imageSpacePanCine[2]);
         this.imageSpacePanCine[2] += dz;
     }
 
