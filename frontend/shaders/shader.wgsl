@@ -23,7 +23,7 @@ fn vert_main(@location(0) position: vec2<f32>, @location(1) uv: vec2<f32>) -> Ve
 @fragment
 fn frag_main(@location(0) fragUV: vec2<f32>) -> @location(0) vec4<f32> {
     var sample = textureSample(mipTexture, mipSampler, fragUV);
-    // Only the red window width and window level need to be calculated texture is greyscale
+    // Only the red window width and window level need to be calculated as texture is greyscale
     var grey = (sample.r - (uniforms.level + uniforms.width / 2)) / uniforms.width;
     return vec4(grey, grey, grey, 1);
 }

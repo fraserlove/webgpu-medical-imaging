@@ -1,6 +1,6 @@
 # WebGPU Client Side Rendering for Medical Imaging
 
-Handles, displays and renders medical imaging data in the browser using WebGPU to utilise parallel processing. With a backend written in Node.js the server deals with requests for imaging data and serves frontend WebGPU code to run in the clients browser. Note that in order for this to work your browser must support WebGPU and have it enabled. [More Info](https://github.com/gpuweb/gpuweb/wiki/Implementation-Status) Currently only volumes with the pixel format grey16, grey16s, grey8 and grey 8s are supported.
+Handles, displays and renders medical imaging data in the browser using WebGPU to utilise parallel processing. With a backend written in Node.js the server deals with requests for imaging data and serves frontend WebGPU code to run in the clients browser. Note that in order for this to work your browser must support WebGPU and have it enabled. [More Info](https://github.com/gpuweb/gpuweb/wiki/Implementation-Status) Currently only volumes with the pixel format grey16, grey16s, grey8 and grey8s are supported.
 
 ## Install and Usage
 Make sure you have git and node.js installed.

@@ -21,4 +21,4 @@ async function main() {
     requestAnimationFrame(run);
 }
 
-main()
+main();
