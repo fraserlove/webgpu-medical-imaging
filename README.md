@@ -20,3 +20,8 @@ Run the backend Node.js server, specifiying the path to the volume metadata `.xm
 npm start path/to/xml/file.xml
 ```
 The Node.js server runs on port `8080`.
+
+## Controls and Keybindings
+Once the application has loaded, you can left click and drag to rotate, right click and drag to pan, scroll vertically to 
+zoom and scroll horizontally to cine. The left-right and up-down arrow keys are used to change the window level and window 
+width values respectively.

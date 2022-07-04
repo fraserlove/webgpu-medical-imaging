@@ -15,7 +15,7 @@ async function main() {
     
     const run = () => {
         volumeRenderer.render();
-        controller.getInput();
+        controller.updateInputs();
         requestAnimationFrame(run);
     }
     requestAnimationFrame(run);
