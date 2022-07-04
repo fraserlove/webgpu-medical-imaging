@@ -73,19 +73,6 @@ export class VolumeRenderer {
         }
     }
 
-    /* public resizeCanvas(width, height) {
-        this.canvas.width = width;
-        this.canvas.height = height;
-        this.camera.resize(this.canvas.width, this.canvas.height);
-        this.noWorkgroups = [Math.ceil(this.canvas.width / this.blockDims[0]), Math.ceil(this.canvas.height / this.blockDims[1])];
-
-        this.outputTexture = this.device.createTexture({
-            size: [this.canvas.width, this.canvas.height],
-            format: 'rgba16float',
-            usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING
-        });
-    } */
-
     private async initWebGPU(): Promise<boolean> {
         try {
             this.adapter = await navigator.gpu.requestAdapter();
@@ -294,5 +281,40 @@ export class VolumeRenderer {
         this.executeComputePipeline();
         this.executeRenderPipeline();
         this.queue.submit([this.commandEncoder.finish()]);
+    }
+
+    private resizeOutputTexture() {
+        // Called exclusively with resizeCanvas() when user resizes browser window
+        this.outputTexture = this.device.createTexture({
+            size: [this.canvas.width, this.canvas.height],
+            format: 'rgba16float',
+            usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING
+        });
+
+        this.renderBindGroup = this.device.createBindGroup({
+            layout: this.renderBindGroupLayout,
+            entries: [
+                { binding: 0, resource: { buffer: this.renderUniformBuffer } },
+                { binding: 1, resource: this.outputTexture.createView() },
+                { binding: 2, resource: this.sampler }
+            ]
+        });
+
+        this.computeBindGroup = this.device.createBindGroup({
+            layout: this.computeBindGroupLayout,
+            entries: [
+                { binding: 0, resource: { buffer: this.computeUniformBuffer } },
+                { binding: 1, resource: this.volumeTexture.createView() },
+                { binding: 2, resource: this.outputTexture.createView() }
+            ]
+        });
+    }
+
+    public resizeCanvas(width, height) {
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.camera.resize(this.canvas.width, this.canvas.height);
+        this.noWorkgroups = [Math.ceil(this.canvas.width / this.blockDims[0]), Math.ceil(this.canvas.height / this.blockDims[1])];
+        this.resizeOutputTexture();
     }
 }

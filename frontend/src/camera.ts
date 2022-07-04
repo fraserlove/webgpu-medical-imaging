@@ -23,7 +23,7 @@ export class Camera {
         this.boundingBox = vec3.fromValues(boundingBox[0], boundingBox[1], boundingBox[2]);
         this.boundingBoxScale = this.imageBoundingBox[0] / this.boundingBox[0];
 
-        this.setScale(this.boundingBoxScale);
+        this.setScale(0.5);
         this.setPanCine(0, 0, this.boundingBox[2] / 2);
         this.setViewDirection(vec3.fromValues(1, 0, 0), vec3.fromValues(0, -1, 0));
     }
@@ -115,8 +115,8 @@ export class Camera {
         this.wLevel += dl;
     }
 
-    /* public resize(width, height) {
+    public resize(width, height) {
         this.imageBoundingBox = vec3.fromValues(width, height, 0);
         this.boundingBoxScale = this.imageBoundingBox[0] / this.boundingBox[0];
-    } */
+    }
 }

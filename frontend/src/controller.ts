@@ -81,7 +81,7 @@ export class Controller {
 
     private checkResize() {
         window.onresize = () => {
-            // this.renderer.resizeCanvas(window.innerWidth, window.innerHeight);
+            this.renderer.resizeCanvas(window.innerWidth, window.innerHeight);
         }
     }
 
