@@ -1,7 +1,7 @@
 import { Volume } from './volume';
 import { projectionPlane } from './vertices';
 import { Camera } from './camera';
-import shader from '../shaders/shader.wgsl';
+import sample from '../shaders/sample.wgsl';
 import mip16 from '../shaders/mip16.wgsl';
 import mip8 from '../shaders/mip8.wgsl';
 
@@ -12,7 +12,7 @@ export class VolumeRenderer {
     wWidth: number;
     wLevel: number;
     noWorkgroups: number[];
-    computeShader: any;
+    mipShader: any;
 
     adapter: GPUAdapter;
     device: GPUDevice;
@@ -23,23 +23,23 @@ export class VolumeRenderer {
     canvasFormat: GPUTextureFormat;
 
     renderUniformBuffer: GPUBuffer;
-    computeUniformBuffer: GPUBuffer;
+    mipUniformBuffer: GPUBuffer;
     vertexBuffer: GPUBuffer;
-    outputTexture: GPUTexture;
+    mipOutputTexture: GPUTexture;
     volumeTexture: GPUTexture;
     sampler: GPUSampler;
 
     renderBindGroupLayout: GPUBindGroupLayout;
-    computeBindGroupLayout: GPUBindGroupLayout;
+    mipBindGroupLayout: GPUBindGroupLayout;
     renderBindGroup: GPUBindGroup;
-    computeBindGroup: GPUBindGroup;
+    mipBindGroup: GPUBindGroup;
     renderPipeline: GPURenderPipeline;
-    computePipeline: GPUComputePipeline;
+    mipPipeline: GPURenderPipeline;
     
     commandEncoder: GPUCommandEncoder;
     renderPassDescriptor: GPURenderPassDescriptor;
 
-    blockDims = [8, 8];  // Must be same as workgroup size in compute shader
+    blockDims = [8, 8];  // Must be same as workgroup size in mip shader
 
     constructor(volume, width, height) {
         this.volume = volume;
@@ -54,9 +54,9 @@ export class VolumeRenderer {
 
         this.noWorkgroups = [Math.ceil(this.canvas.width / this.blockDims[0]), Math.ceil(this.canvas.height / this.blockDims[1])]
 
-        this.computeShader = mip16
+        this.mipShader = mip16
         if (this.volume.bitsPerVoxel == 8)
-            this.computeShader = mip8
+            this.mipShader = mip8
             
     }
 
@@ -115,22 +115,17 @@ export class VolumeRenderer {
             ]
         });
 
-        this.computeBindGroupLayout = this.device.createBindGroupLayout({
+        this.mipBindGroupLayout = this.device.createBindGroupLayout({
             entries: [
                 {
                     binding: 0,
-                    visibility: GPUShaderStage.COMPUTE,
+                    visibility: GPUShaderStage.FRAGMENT,
                     buffer: { type: 'uniform' }
                 } as GPUBindGroupLayoutEntry,
                 {
                     binding: 1,
-                    visibility: GPUShaderStage.COMPUTE,
+                    visibility: GPUShaderStage.FRAGMENT,
                     texture: { sampleType: 'float', viewDimension: '3d' }
-                } as GPUBindGroupLayoutEntry,
-                {
-                    binding: 2,
-                    visibility: GPUShaderStage.COMPUTE,
-                    storageTexture: { format: 'rgba16float', access: 'write-only', viewDimension: '2d'}
                 } as GPUBindGroupLayoutEntry,
             ]
         });
@@ -140,7 +135,7 @@ export class VolumeRenderer {
                 bindGroupLayouts: [this.renderBindGroupLayout]
             }),
             vertex: {
-                module: this.device.createShaderModule({ code: shader }),
+                module: this.device.createShaderModule({ code: sample }),
                 entryPoint: 'vert_main',
                 buffers: [
                         {
@@ -163,19 +158,43 @@ export class VolumeRenderer {
                 ]
             },
             fragment: {
-                module: this.device.createShaderModule({ code: shader }),
+                module: this.device.createShaderModule({ code: sample }),
                 entryPoint: 'frag_main',
                 targets: [{ format: this.canvasFormat }]
             }
         });
 
-        this.computePipeline = this.device.createComputePipeline({
+        this.mipPipeline = this.device.createRenderPipeline({
             layout: this.device.createPipelineLayout({
-                bindGroupLayouts: [this.computeBindGroupLayout]
+                bindGroupLayouts: [this.mipBindGroupLayout]
             }),
-            compute: {
-                module: this.device.createShaderModule({ code: this.computeShader }),
-                entryPoint: 'main'
+            vertex: {
+                module: this.device.createShaderModule({ code: this.mipShader }),
+                entryPoint: 'vert_main',
+                buffers: [
+                        {
+                        arrayStride: projectionPlane.vertexSize,
+                        attributes: [
+                            {
+                                // Position
+                                shaderLocation: 0,
+                                offset: projectionPlane.positionOffset,
+                                format: 'float32x2',
+                            },
+                            {
+                                // UV
+                                shaderLocation: 1,
+                                offset: projectionPlane.UVOffset,
+                                format: 'float32x2',
+                            },
+                        ]
+                    } as GPUVertexBufferLayout
+                ]
+            },
+            fragment: {
+                module: this.device.createShaderModule({ code: this.mipShader }),
+                entryPoint: 'frag_main',
+                targets: [{ format: this.volume.textureFormat }]
             }
         });
     }
@@ -186,7 +205,7 @@ export class VolumeRenderer {
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
-        this.computeUniformBuffer = this.device.createBuffer({
+        this.mipUniformBuffer = this.device.createBuffer({
             size: this.camera.getViewMatrix().byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
@@ -197,7 +216,7 @@ export class VolumeRenderer {
             mappedAtCreation: true
         });
         new Float32Array(this.vertexBuffer.getMappedRange()).set(projectionPlane.vertices);
-        this.vertexBuffer.unmap()
+        this.vertexBuffer.unmap();
 
         this.sampler = this.device.createSampler({
             magFilter: 'linear',
@@ -212,10 +231,10 @@ export class VolumeRenderer {
             dimension: '3d'
         });
 
-        this.outputTexture = this.device.createTexture({
+        this.mipOutputTexture = this.device.createTexture({
             size: [this.canvas.width, this.canvas.height],
-            format: 'rgba16float',
-            usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING
+            format: this.volume.textureFormat,
+            usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
         });
 
         const imageDataLayout = {
@@ -226,25 +245,24 @@ export class VolumeRenderer {
 
         this.queue.writeTexture({ texture: this.volumeTexture }, this.volume.data, imageDataLayout, this.volume.size());
         this.queue.writeBuffer(this.renderUniformBuffer, 0, this.camera.getWWidthLevel());
-        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.camera.getViewMatrix());
+        this.queue.writeBuffer(this.mipUniformBuffer, 0, this.camera.getViewMatrix());
        
         this.renderBindGroup = this.device.createBindGroup({
             layout: this.renderBindGroupLayout,
             entries: [
                 { binding: 0, resource: { buffer: this.renderUniformBuffer } },
-                { binding: 1, resource: this.outputTexture.createView() },
+                { binding: 1, resource: this.mipOutputTexture.createView() },
                 { binding: 2, resource: this.sampler }
             ]
         });
 
-        this.computeBindGroup = this.device.createBindGroup({
-            layout: this.computeBindGroupLayout,
+        this.mipBindGroup = this.device.createBindGroup({
+            layout: this.mipBindGroupLayout,
             entries: [
-                { binding: 0, resource: { buffer: this.computeUniformBuffer } },
-                { binding: 1, resource: this.volumeTexture.createView() },
-                { binding: 2, resource: this.outputTexture.createView() }
+                { binding: 0, resource: { buffer: this.mipUniformBuffer } },
+                { binding: 1, resource: this.volumeTexture.createView() }
             ]
-        })
+        });
 
         this.renderPassDescriptor = {
             colorAttachments: [{
@@ -253,15 +271,17 @@ export class VolumeRenderer {
                 loadOp: 'clear' as GPULoadOp,
                 storeOp: 'store' as GPUStoreOp
             }]
-        }
+        };
     }
 
-    private executeComputePipeline() {
-        const passEncoder = this.commandEncoder.beginComputePass();
-        passEncoder.setPipeline(this.computePipeline);
-        this.queue.writeBuffer(this.computeUniformBuffer, 0, this.camera.getViewMatrix());
-        passEncoder.setBindGroup(0, this.computeBindGroup);
-        passEncoder.dispatchWorkgroups(this.noWorkgroups[0], this.noWorkgroups[1]);
+    private executeMIPPipeline() {
+        this.renderPassDescriptor.colorAttachments[0].view = this.mipOutputTexture.createView();
+        const passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
+        passEncoder.setPipeline(this.mipPipeline);
+        this.queue.writeBuffer(this.mipUniformBuffer, 0, this.camera.getViewMatrix());
+        passEncoder.setBindGroup(0, this.mipBindGroup);
+        passEncoder.setVertexBuffer(0, this.vertexBuffer);
+        passEncoder.draw(projectionPlane.vertexCount);
         passEncoder.end();
     }
 
@@ -278,34 +298,33 @@ export class VolumeRenderer {
 
     public render() {
         this.commandEncoder = this.device.createCommandEncoder();
-        this.executeComputePipeline();
+        this.executeMIPPipeline();
         this.executeRenderPipeline();
         this.queue.submit([this.commandEncoder.finish()]);
     }
 
     private resizeOutputTexture() {
         // Called exclusively with resizeCanvas() when user resizes browser window
-        this.outputTexture = this.device.createTexture({
+        this.mipOutputTexture = this.device.createTexture({
             size: [this.canvas.width, this.canvas.height],
-            format: 'rgba16float',
-            usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING
+            format: this.volume.textureFormat,
+            usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
         });
 
         this.renderBindGroup = this.device.createBindGroup({
             layout: this.renderBindGroupLayout,
             entries: [
                 { binding: 0, resource: { buffer: this.renderUniformBuffer } },
-                { binding: 1, resource: this.outputTexture.createView() },
+                { binding: 1, resource: this.mipOutputTexture.createView() },
                 { binding: 2, resource: this.sampler }
             ]
         });
 
-        this.computeBindGroup = this.device.createBindGroup({
-            layout: this.computeBindGroupLayout,
+        this.mipBindGroup = this.device.createBindGroup({
+            layout: this.mipBindGroupLayout,
             entries: [
-                { binding: 0, resource: { buffer: this.computeUniformBuffer } },
-                { binding: 1, resource: this.volumeTexture.createView() },
-                { binding: 2, resource: this.outputTexture.createView() }
+                { binding: 0, resource: { buffer: this.mipUniformBuffer } },
+                { binding: 1, resource: this.volumeTexture.createView() }
             ]
         });
     }
