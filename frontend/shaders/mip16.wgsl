@@ -1,3 +1,9 @@
+// Move this compute shader into a another shader, with the code being in the fragment part of it.
+// Vertex part of shader should be the same as in shader.wgsl (just standard code). From the fragment part output the colour and save
+// into a 2d output texture bound to the output of the fragment shader. Then use this 2d texture as an input to the other
+// shader. So two separate render pipelines, rewrite this shader into a fragment shader, this shader writes to a texture pixel
+// by pixel via the fragment shader for the other shader to take and display on the screen.
+
 struct Uniforms {
     transform: mat4x4<f32>
 };

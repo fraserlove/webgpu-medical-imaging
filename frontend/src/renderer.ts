@@ -46,7 +46,7 @@ export class VolumeRenderer {
         this.canvas.width = width;
         this.canvas.height = height;
 
-        this.camera = new Camera(this.canvas.width, this.canvas.height, this.volume.boundingBox, this.volume.volumeDataScale); // this.volume.size()
+        this.camera = new Camera(this.canvas.width, this.canvas.height, this.volume.boundingBox, this.volume.volumeDataScale);
 
         this.mipShader = mip16
         if (this.volume.bitsPerVoxel == 8)

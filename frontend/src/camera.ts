@@ -39,7 +39,7 @@ export class Camera {
             this.viewSide[2], this.viewUp[2], this.viewDirection[2], 0,
             0, 0, 0, 1
         )
-        // Scale z-axis according to data to volume ratio
+        // Scale z-axis according to volume-to-data ratio
         mat4.multiply(this.camera, mat4.fromScaling(mat4.create(), vec3.fromValues(1, 1, this.volumeDataScale)), this.camera);
         // Centre volume
         mat4.multiply(this.camera, mat4.fromTranslation(mat4.create(), this.boundingBoxCentre()), this.camera);
