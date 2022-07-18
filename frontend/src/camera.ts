@@ -17,11 +17,13 @@ export class Camera {
     private wLevel: number = 0.498;
 
     private boundingBoxScale: number;
+    private volumeDataScale: number;
 
-    constructor(imageWidth: number, imageHeight: number, boundingBox: number[]) {
+    constructor(imageWidth: number, imageHeight: number, boundingBox: number[], volumeDataScale: number) {
         this.imageBoundingBox = vec3.fromValues(imageWidth, imageHeight, 0);
         this.boundingBox = vec3.fromValues(boundingBox[0], boundingBox[1], boundingBox[2]);
         this.boundingBoxScale = this.imageBoundingBox[0] / this.boundingBox[0];
+        this.volumeDataScale = volumeDataScale;
 
         this.setScale(0.5);
         this.setPanCine(0, 0, this.boundingBox[2] / 2);
@@ -37,7 +39,8 @@ export class Camera {
             this.viewSide[2], this.viewUp[2], this.viewDirection[2], 0,
             0, 0, 0, 1
         )
-
+        // Scale z-axis according to data to volume ratio
+        mat4.multiply(this.camera, mat4.fromScaling(mat4.create(), vec3.fromValues(1, 1, this.volumeDataScale)), this.camera);
         // Centre volume
         mat4.multiply(this.camera, mat4.fromTranslation(mat4.create(), this.boundingBoxCentre()), this.camera);
         // Apply rotation
@@ -87,7 +90,6 @@ export class Camera {
     }
 
     public updatePan(dx: number, dy: number) {
-        // Adjust dx and dy to scale
         this.imageSpacePanCine[0] += dx / this.scale[0];
         this.imageSpacePanCine[1] += dy / this.scale[1];
     }

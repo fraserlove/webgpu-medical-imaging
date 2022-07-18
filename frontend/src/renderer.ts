@@ -46,13 +46,11 @@ export class VolumeRenderer {
         this.canvas.width = width;
         this.canvas.height = height;
 
-        // Set last argument to this.volume.boundingBox when implemented correct scale ratio in z-axis
-        this.camera = new Camera(this.canvas.width, this.canvas.height, this.volume.size());
+        this.camera = new Camera(this.canvas.width, this.canvas.height, this.volume.boundingBox, this.volume.volumeDataScale); // this.volume.size()
 
         this.mipShader = mip16
         if (this.volume.bitsPerVoxel == 8)
             this.mipShader = mip8
-   
     }
 
     public async start() {
@@ -64,7 +62,6 @@ export class VolumeRenderer {
             this.initBuffers();
             this.initResources();
             this.initBindGroups();
-            console.log(this.volume.textureFormat + ' ' + this.canvasFormat);
         }
         else {
             console.log('WebGPU support not detected.')

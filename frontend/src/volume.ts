@@ -9,6 +9,7 @@ export class Volume {
     bytesPerLine: number;
     boundingBox: number[];
     data: ArrayBuffer;
+    volumeDataScale: number;
     textureFormat: any;
 
     constructor() {
@@ -33,6 +34,7 @@ export class Volume {
         this.bytesPerLine = bytesPerLine.data;
         this.boundingBox = boundingBox.data.substr(1, boundingBox.data.length-2).split(",");;
         this.data = data.data;
+        this.volumeDataScale = this.boundingBox[2] / this.depth;
         this.findFormat();
     }
 
