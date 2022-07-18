@@ -64,6 +64,7 @@ export class VolumeRenderer {
             this.initBuffers();
             this.initResources();
             this.initBindGroups();
+            console.log(this.volume.textureFormat + ' ' + this.canvasFormat);
         }
         else {
             console.log('WebGPU support not detected.')
@@ -185,7 +186,7 @@ export class VolumeRenderer {
             fragment: {
                 module: this.device.createShaderModule({ code: this.mipShader }),
                 entryPoint: 'frag_main',
-                targets: [{ format: this.volume.textureFormat }]
+                targets: [{ format: 'rgba16float' }]
             }
         });
     }
@@ -221,7 +222,7 @@ export class VolumeRenderer {
 
         this.mipTexture = this.device.createTexture({
             size: [this.canvas.width, this.canvas.height],
-            format: this.volume.textureFormat,
+            format: 'rgba16float',
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
         });
 
@@ -307,7 +308,7 @@ export class VolumeRenderer {
         
         this.mipTexture = this.device.createTexture({
             size: [this.canvas.width, this.canvas.height],
-            format: this.volume.textureFormat,
+            format: 'rgba16float',
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
         }); 
         this.initBindGroups();
