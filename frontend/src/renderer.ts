@@ -11,6 +11,8 @@ export class VolumeRenderer {
 
     wWidth: number;
     wLevel: number;
+    slabCentre: number;
+    noSamples: number;
     mipShader: any;
 
     adapter: GPUAdapter;
@@ -51,6 +53,9 @@ export class VolumeRenderer {
         this.mipShader = mip16
         if (this.volume.bitsPerVoxel == 8)
             this.mipShader = mip8
+
+        this.slabCentre = this.volume.depth / 2;
+        this.noSamples = this.volume.depth;
     }
 
     public async start() {
@@ -189,7 +194,7 @@ export class VolumeRenderer {
         });
 
         this.mipUniformBuffer = this.device.createBuffer({
-            size: this.camera.getViewMatrix().byteLength,
+            size: this.getMIPUniformData().byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
@@ -200,9 +205,6 @@ export class VolumeRenderer {
         });
         new Float32Array(this.vertexBuffer.getMappedRange()).set(projectionPlane.vertices);
         this.vertexBuffer.unmap();
-
-        this.queue.writeBuffer(this.renderUniformBuffer, 0, this.camera.getWWidthLevel());
-        this.queue.writeBuffer(this.mipUniformBuffer, 0, this.camera.getViewMatrix());
     }
 
     private initResources() {
@@ -266,7 +268,7 @@ export class VolumeRenderer {
         this.renderPassDescriptor.colorAttachments[0].view = this.mipTexture.createView();
         const passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
         passEncoder.setPipeline(this.mipPipeline);
-        this.queue.writeBuffer(this.mipUniformBuffer, 0, this.camera.getViewMatrix());
+        this.queue.writeBuffer(this.mipUniformBuffer, 0, this.getMIPUniformData());
         passEncoder.setBindGroup(0, this.mipBindGroup);
         passEncoder.setVertexBuffer(0, this.vertexBuffer);
         passEncoder.draw(projectionPlane.vertexCount);
@@ -282,6 +284,12 @@ export class VolumeRenderer {
         passEncoder.setVertexBuffer(0, this.vertexBuffer);
         passEncoder.draw(projectionPlane.vertexCount);
         passEncoder.end();
+    }
+
+    private getMIPUniformData() {
+        var mipUniformData = new Float32Array(this.camera.getViewMatrix().length + 2);
+        mipUniformData.set([...this.camera.getViewMatrix(), this.slabCentre, this.noSamples]);
+        return mipUniformData;
     }
 
     public render() {
