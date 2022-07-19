@@ -56,7 +56,7 @@ export class VolumeRenderer {
     public async start() {
         console.log('Initialising WebGPU...');
         if (await this.initWebGPU()) {
-            console.log('Creating pipelines...');
+            console.log('Creating Pipelines...');
             this.initPipelines();
             console.log('Initialising Resources...');
             this.initBuffers();
@@ -122,6 +122,11 @@ export class VolumeRenderer {
                     visibility: GPUShaderStage.FRAGMENT,
                     texture: { sampleType: 'float', viewDimension: '3d' }
                 } as GPUBindGroupLayoutEntry,
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    sampler: { type: 'filtering' }
+                } as GPUBindGroupLayoutEntry
             ]
         });
 
@@ -175,7 +180,13 @@ export class VolumeRenderer {
                                 shaderLocation: 0,
                                 offset: projectionPlane.positionOffset,
                                 format: 'float32x2',
-                            }
+                            },
+                            {
+                                // UV
+                                shaderLocation: 1,
+                                offset: projectionPlane.UVOffset,
+                                format: 'float32x2',
+                            },
                         ]
                     } as GPUVertexBufferLayout
                 ]
@@ -254,7 +265,8 @@ export class VolumeRenderer {
             layout: this.mipBindGroupLayout,
             entries: [
                 { binding: 0, resource: { buffer: this.mipUniformBuffer } },
-                { binding: 1, resource: this.volumeTexture.createView() }
+                { binding: 1, resource: this.volumeTexture.createView() },
+                { binding: 2, resource: this.sampler }
             ]
         });
 
