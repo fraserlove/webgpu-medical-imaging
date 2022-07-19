@@ -1,7 +1,7 @@
 import { Volume } from './volume';
 import { projectionPlane } from './vertices';
 import { Camera } from './camera';
-import sample from '../shaders/sample.wgsl';
+import loader from '../shaders/loader.wgsl';
 import mip16 from '../shaders/mip16.wgsl';
 import mip8 from '../shaders/mip8.wgsl';
 
@@ -135,7 +135,7 @@ export class VolumeRenderer {
                 bindGroupLayouts: [this.sampleBindGroupLayout]
             }),
             vertex: {
-                module: this.device.createShaderModule({ code: sample }),
+                module: this.device.createShaderModule({ code: loader }),
                 entryPoint: 'vert_main',
                 buffers: [
                         {
@@ -158,7 +158,7 @@ export class VolumeRenderer {
                 ]
             },
             fragment: {
-                module: this.device.createShaderModule({ code: sample }),
+                module: this.device.createShaderModule({ code: loader }),
                 entryPoint: 'frag_main',
                 targets: [{ format: this.canvasFormat }]
             }
@@ -180,13 +180,7 @@ export class VolumeRenderer {
                                 shaderLocation: 0,
                                 offset: projectionPlane.positionOffset,
                                 format: 'float32x2',
-                            },
-                            {
-                                // UV
-                                shaderLocation: 1,
-                                offset: projectionPlane.UVOffset,
-                                format: 'float32x2',
-                            },
+                            }
                         ]
                     } as GPUVertexBufferLayout
                 ]
