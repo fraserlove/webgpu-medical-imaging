@@ -48,14 +48,11 @@ export class VolumeRenderer {
         this.canvas.width = width;
         this.canvas.height = height;
 
-        this.camera = new Camera(this.canvas.width, this.canvas.height, this.volume.boundingBox, this.volume.volumeDataScale);
+        this.camera = new Camera(this.canvas.width, this.canvas.height, this.volume);
 
         this.mipShader = mip16
         if (this.volume.bitsPerVoxel == 8)
             this.mipShader = mip8
-
-        this.slabCentre = this.volume.depth / 2;
-        this.noSamples = this.volume.depth;
     }
 
     public async start() {
@@ -288,7 +285,7 @@ export class VolumeRenderer {
 
     private getMIPUniformData() {
         var mipUniformData = new Float32Array(this.camera.getViewMatrix().length + 2);
-        mipUniformData.set([...this.camera.getViewMatrix(), this.slabCentre, this.noSamples]);
+        mipUniformData.set([...this.camera.getViewMatrix(), ...this.camera.getSampleInfo()]);
         return mipUniformData;
     }
 

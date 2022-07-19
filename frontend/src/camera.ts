@@ -6,8 +6,6 @@ export class Camera {
     private viewSide: vec3 = vec3.create(); // Points parallel to image plane - y-axis for camera
 
     private imageSpacePanCine: vec3;
-    private imageBoundingBox: vec3;
-    private boundingBox: vec3;
     private scale: vec3;
 
     private camera: mat4 = mat4.create();
@@ -16,17 +14,22 @@ export class Camera {
     private wWidth: number = 1000.0/65535.0;
     private wLevel: number = 0.498;
 
-    private boundingBoxScale: number;
+    private imageSize: number[];
+    private volumeBounds: number[];
+    private slabCentre: number;
+    private noSamples: number;
     private volumeDataScale: number;
 
-    constructor(imageWidth: number, imageHeight: number, boundingBox: number[], volumeDataScale: number) {
-        this.imageBoundingBox = vec3.fromValues(imageWidth, imageHeight, 0);
-        this.boundingBox = vec3.fromValues(boundingBox[0], boundingBox[1], boundingBox[2]);
-        this.boundingBoxScale = this.imageBoundingBox[0] / this.boundingBox[0];
-        this.volumeDataScale = volumeDataScale;
+    constructor(imageWidth: number, imageHeight: number, volume) {
+        this.imageSize = [imageWidth, imageHeight]
+        this.volumeBounds = volume.boundingBox;
+        this.volumeDataScale = volume.volumeDataScale;
 
-        this.setScale(0.5);
-        this.setPanCine(0, 0, this.boundingBox[2] / 2);
+        this.slabCentre = volume.depth / 2;
+        this.noSamples = volume.depth;
+
+        this.setScale(0.1);
+        this.setPanCine(0, 0, this.volumeBounds[2] / 2);
         this.setViewDirection(vec3.fromValues(1, 0, 0), vec3.fromValues(0, -1, 0));
     }
 
@@ -42,7 +45,7 @@ export class Camera {
         // Scale z-axis according to volume-to-data ratio
         mat4.multiply(this.camera, mat4.fromScaling(mat4.create(), vec3.fromValues(1, 1, this.volumeDataScale)), this.camera);
         // Centre volume
-        mat4.multiply(this.camera, mat4.fromTranslation(mat4.create(), this.boundingBoxCentre()), this.camera);
+        mat4.multiply(this.camera, mat4.fromTranslation(mat4.create(), this.volumeCentre()), this.camera);
         // Apply rotation
         mat4.multiply(this.camera, viewBasisMatrix, this.camera);
         // Apply cine-pan transformation
@@ -57,21 +60,10 @@ export class Camera {
     public getCameraMatrix() { this.CalculateViewMatrix(); return this.camera as Float32Array; }
     public getViewMatrix() { this.CalculateViewMatrix(); return this.view as Float32Array; }
     public getWWidthLevel() { return new Float32Array([this.wWidth, this.wLevel]); }
+    public getSampleInfo() { return new Float32Array([this.slabCentre, this.noSamples])} 
 
-    private boundingBoxCentre() {
-        return vec3.fromValues(-this.boundingBox[0] / 2, -this.boundingBox[1] / 2, -this.boundingBox[2] / 2);
-    }
-
-    private imageCentre() {
-        return vec3.fromValues(this.imageBoundingBox[0] / 2, this.imageBoundingBox[1] / 2, 0);
-    }
-
-    private setScale(s: number) {
-        if (s > 0) {
-            this.scale = vec3.fromValues(s, s, 1);
-            vec3.multiply(this.scale, this.scale, vec3.fromValues(this.boundingBoxScale, this.boundingBoxScale, 1));
-        }
-    }
+    private volumeCentre() { return vec3.fromValues(-this.volumeBounds[0] / 2, -this.volumeBounds[1] / 2, -this.volumeBounds[2] / 2); }
+    private imageCentre() { return vec3.fromValues(this.imageSize[0] / 2, this.imageSize[1] / 2, 0); }
 
     private setViewDirection(viewDirection: vec3, viewUp: vec3) {
         let viewSide: vec3 = vec3.create();
@@ -79,6 +71,10 @@ export class Camera {
         vec3.cross(this.viewUp, viewDirection, viewSide);
         this.viewDirection = viewDirection;
         this.viewSide = viewSide;
+    }
+
+    private setScale(s: number) {
+        if (s > 0) this.scale = vec3.fromValues(s, s, 1);
     }
 
     private setPanCine(x: number, y: number, z: number) {
@@ -117,7 +113,6 @@ export class Camera {
     }
 
     public resize(width, height) {
-        this.imageBoundingBox = vec3.fromValues(width, height, 0);
-        this.boundingBoxScale = this.imageBoundingBox[0] / this.boundingBox[0];
+        this.imageSize = [width, height];
     }
 }
