@@ -104,15 +104,9 @@ export class Camera {
         vec3.transformMat4(this.viewUp, this.viewUp, mat4.fromRotation(mat4.create(), dy, this.viewSide));
     }
 
-    public updateWWidth(dw: number) {
-        this.wWidth += dw;
-    }
-
-    public updateWLevel(dl: number) {
-        this.wLevel += dl;
-    }
-
-    public resize(width, height) {
-        this.imageSize = [width, height];
-    }
+    public updateWWidth(dw: number) { this.wWidth += dw; }
+    public updateWLevel(dl: number) { this.wLevel += dl; }
+    public updateNoSamples(ds: number) { this.noSamples += ds; }
+    public updateSlabCentre(dz: number) { this.slabCentre += dz; }
+    public resize(width, height) { this.imageSize = [width, height]; }
 }
