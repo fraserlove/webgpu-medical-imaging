@@ -17,7 +17,9 @@ fn frag_main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
     var maxIntensity: f32 = 0; // Only dealing with unsigned integers
     for (var k = 0; k < i32(size.z); k++) {
         var transformed = uniforms.transform * vec4<f32>(coord.xy, f32(k), 1.0);
-        var sample = textureSample(volumeTexture, volumeSampler, vec3<f32>(transformed.x / size.x, transformed.y / size.y, transformed.z / size.z));
+        // Scale down transformed coordinates to fit within 0->1 range
+        var uvz_coords = vec3<f32>(transformed.x / size.x, transformed.y / size.y, transformed.z / size.z);
+        var sample = textureSample(volumeTexture, volumeSampler, uvz_coords);
         // Check transformed coordinate is still inside bounds - removes texture clamp artefact
         if (transformed.x < size.x && transformed.x > 0 && transformed.y < size.y && transformed.y > 0 && transformed.z < size.z && transformed.z > 0) {
             // Intensity stored over 8-bit red and green channels

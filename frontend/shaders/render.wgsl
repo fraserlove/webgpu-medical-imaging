@@ -5,7 +5,6 @@ struct Uniforms {
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 @group(0) @binding(1) var mipTexture: texture_2d<f32>;
-@group(0) @binding(2) var mipSampler: sampler;
 
 @vertex
 fn vert_main(@location(0) position: vec2<f32>) -> @builtin(position) vec4<f32> {

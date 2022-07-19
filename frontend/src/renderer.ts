@@ -1,7 +1,7 @@
 import { Volume } from './volume';
 import { projectionPlane } from './vertices';
 import { Camera } from './camera';
-import loader from '../shaders/loader.wgsl';
+import render from '../shaders/render.wgsl';
 import mip16 from '../shaders/mip16.wgsl';
 import mip8 from '../shaders/mip8.wgsl';
 
@@ -21,18 +21,18 @@ export class VolumeRenderer {
     context: GPUCanvasContext;
     canvasFormat: GPUTextureFormat;
 
-    sampleUniformBuffer: GPUBuffer;
+    renderUniformBuffer: GPUBuffer;
     mipUniformBuffer: GPUBuffer;
     vertexBuffer: GPUBuffer;
     mipTexture: GPUTexture;
     volumeTexture: GPUTexture;
     sampler: GPUSampler;
 
-    sampleBindGroupLayout: GPUBindGroupLayout;
+    renderBindGroupLayout: GPUBindGroupLayout;
     mipBindGroupLayout: GPUBindGroupLayout;
-    sampleBindGroup: GPUBindGroup;
+    renderBindGroup: GPUBindGroup;
     mipBindGroup: GPUBindGroup;
-    samplePipeline: GPURenderPipeline;
+    renderPipeline: GPURenderPipeline;
     mipPipeline: GPURenderPipeline;
     
     commandEncoder: GPUCommandEncoder;
@@ -90,7 +90,7 @@ export class VolumeRenderer {
     }
 
     private initPipelines() {
-        this.sampleBindGroupLayout = this.device.createBindGroupLayout({
+        this.renderBindGroupLayout = this.device.createBindGroupLayout({
             entries: [
                 {
                     binding: 0,
@@ -101,11 +101,6 @@ export class VolumeRenderer {
                     binding: 1,
                     visibility: GPUShaderStage.FRAGMENT,
                     texture: { sampleType: 'float', viewDimension: '2d' }
-                } as GPUBindGroupLayoutEntry,
-                {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: { type: 'filtering' }
                 } as GPUBindGroupLayoutEntry
             ]
         });
@@ -130,12 +125,12 @@ export class VolumeRenderer {
             ]
         });
 
-        this.samplePipeline = this.device.createRenderPipeline({
+        this.renderPipeline = this.device.createRenderPipeline({
             layout: this.device.createPipelineLayout({
-                bindGroupLayouts: [this.sampleBindGroupLayout]
+                bindGroupLayouts: [this.renderBindGroupLayout]
             }),
             vertex: {
-                module: this.device.createShaderModule({ code: loader }),
+                module: this.device.createShaderModule({ code: render }),
                 entryPoint: 'vert_main',
                 buffers: [
                         {
@@ -146,19 +141,13 @@ export class VolumeRenderer {
                                 shaderLocation: 0,
                                 offset: projectionPlane.positionOffset,
                                 format: 'float32x2',
-                            },
-                            {
-                                // UV
-                                shaderLocation: 1,
-                                offset: projectionPlane.UVOffset,
-                                format: 'float32x2',
-                            },
+                            }
                         ]
                     } as GPUVertexBufferLayout
                 ]
             },
             fragment: {
-                module: this.device.createShaderModule({ code: loader }),
+                module: this.device.createShaderModule({ code: render }),
                 entryPoint: 'frag_main',
                 targets: [{ format: this.canvasFormat }]
             }
@@ -194,7 +183,7 @@ export class VolumeRenderer {
     }
 
     private initBuffers() {
-        this.sampleUniformBuffer = this.device.createBuffer({
+        this.renderUniformBuffer = this.device.createBuffer({
             size: this.camera.getWWidthLevel().byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
@@ -212,7 +201,7 @@ export class VolumeRenderer {
         new Float32Array(this.vertexBuffer.getMappedRange()).set(projectionPlane.vertices);
         this.vertexBuffer.unmap();
 
-        this.queue.writeBuffer(this.sampleUniformBuffer, 0, this.camera.getWWidthLevel());
+        this.queue.writeBuffer(this.renderUniformBuffer, 0, this.camera.getWWidthLevel());
         this.queue.writeBuffer(this.mipUniformBuffer, 0, this.camera.getViewMatrix());
     }
 
@@ -246,7 +235,7 @@ export class VolumeRenderer {
 
         this.renderPassDescriptor = {
             colorAttachments: [{
-                view: undefined, // set in sample loop
+                view: undefined, // set in render loop
                 clearValue: [0.0, 0.0, 0.0, 1.0],
                 loadOp: 'clear' as GPULoadOp,
                 storeOp: 'store' as GPUStoreOp
@@ -264,12 +253,11 @@ export class VolumeRenderer {
             ]
         });
 
-        this.sampleBindGroup = this.device.createBindGroup({
-            layout: this.sampleBindGroupLayout,
+        this.renderBindGroup = this.device.createBindGroup({
+            layout: this.renderBindGroupLayout,
             entries: [
-                { binding: 0, resource: { buffer: this.sampleUniformBuffer } },
+                { binding: 0, resource: { buffer: this.renderUniformBuffer } },
                 { binding: 1, resource: this.mipTexture.createView() },
-                { binding: 2, resource: this.sampler }
             ]
         });
     }
@@ -285,12 +273,12 @@ export class VolumeRenderer {
         passEncoder.end();
     }
 
-    private executeSamplePipeline() {
+    private executeRenderPipeline() {
         this.renderPassDescriptor.colorAttachments[0].view = this.context.getCurrentTexture().createView();
         const passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
-        passEncoder.setPipeline(this.samplePipeline);
-        this.queue.writeBuffer(this.sampleUniformBuffer, 0, this.camera.getWWidthLevel());
-        passEncoder.setBindGroup(0, this.sampleBindGroup);
+        passEncoder.setPipeline(this.renderPipeline);
+        this.queue.writeBuffer(this.renderUniformBuffer, 0, this.camera.getWWidthLevel());
+        passEncoder.setBindGroup(0, this.renderBindGroup);
         passEncoder.setVertexBuffer(0, this.vertexBuffer);
         passEncoder.draw(projectionPlane.vertexCount);
         passEncoder.end();
@@ -299,7 +287,7 @@ export class VolumeRenderer {
     public render() {
         this.commandEncoder = this.device.createCommandEncoder();
         this.executeMIPPipeline();
-        this.executeSamplePipeline();
+        this.executeRenderPipeline();
         this.queue.submit([this.commandEncoder.finish()]);
     }
 
