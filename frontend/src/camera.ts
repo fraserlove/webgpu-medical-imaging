@@ -19,6 +19,7 @@ export class Camera {
     private slabCentre: number;
     private noSamples: number;
     private volumeDataScale: number;
+    private maxSamples: number;
 
     constructor(imageWidth: number, imageHeight: number, volume) {
         this.imageSize = [imageWidth, imageHeight]
@@ -27,8 +28,9 @@ export class Camera {
 
         this.slabCentre = volume.depth / 2;
         this.noSamples = volume.depth;
+        this.maxSamples = volume.depth;
 
-        this.setScale(0.1);
+        this.setScale(0.4);
         this.setPanCine(0, 0, this.volumeBounds[2] / 2);
         this.setViewDirection(vec3.fromValues(1, 0, 0), vec3.fromValues(0, -1, 0));
     }
@@ -106,7 +108,7 @@ export class Camera {
 
     public updateWWidth(dw: number) { this.wWidth += dw; }
     public updateWLevel(dl: number) { this.wLevel += dl; }
-    public updateNoSamples(ds: number) { this.noSamples += ds; }
+    public updateNoSamples(ds: number) { if (this.noSamples + ds > 0 && this.noSamples + ds < this.maxSamples) this.noSamples += ds; }
     public updateSlabCentre(dz: number) { this.slabCentre += dz; }
     public resize(width, height) { this.imageSize = [width, height]; }
 }

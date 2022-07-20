@@ -1,22 +1,24 @@
 import { VolumeRenderer } from "./renderer";
 
 export class Controller {
-    renderer: VolumeRenderer;
-    leftDown: boolean;
-    rightDown: boolean;
-    initPos: [number, number];
+    private renderer: VolumeRenderer;
+    private leftDown: boolean;
+    private rightDown: boolean;
+    private initPos: [number, number];
 
-    wWidthInc: boolean;
-    wWidthDec: boolean;
-    wLevelInc: boolean;
-    wLevelDec: boolean;
+    private wWidthInc: boolean;
+    private wWidthDec: boolean;
+    private wLevelInc: boolean;
+    private wLevelDec: boolean;
+    private noSamplesInc: boolean;
+    private noSamplesDec: boolean;
 
-    minDelta: number = 2;
-    scaleFactor: number = 1000;
-    rotationFactor: number = 100;
-    cineFactor: number = 10;
-    wWidthFactor: number = 0.0002;
-    wLevelFactor: number = 0.0001;
+    private scaleFactor: number = 1000;
+    private rotationFactor: number = 100;
+    private cineFactor: number = 10;
+    private wWidthFactor: number = 0.0002;
+    private wLevelFactor: number = 0.0001;
+    private noSamplesFactor: number = 5;
 
     constructor(renderer: VolumeRenderer) {
         this.leftDown = false;
@@ -67,6 +69,8 @@ export class Controller {
                 case 'ArrowLeft': this.wLevelDec = true; break;
                 case 'ArrowDown': this.wWidthDec = true; break;
                 case 'ArrowRight': this.wLevelInc = true; break;
+                case '+': this.noSamplesInc = true; break;
+                case '-': this.noSamplesDec = true; break;
             }
         }, false);
         document.addEventListener('keyup', (e : KeyboardEvent) => {
@@ -75,6 +79,8 @@ export class Controller {
                 case 'ArrowLeft': this.wLevelDec = false; break;
                 case 'ArrowDown': this.wWidthDec = false; break;
                 case 'ArrowRight': this.wLevelInc = false; break;
+                case '+': this.noSamplesInc = false; break;
+                case '-': this.noSamplesDec = false; break;
             }
         }, false);
     }
@@ -91,5 +97,7 @@ export class Controller {
         if (this.wLevelDec) this.renderer.camera.updateWLevel(-this.wLevelFactor);
         if (this.wWidthInc) this.renderer.camera.updateWWidth(this.wWidthFactor);
         if (this.wWidthDec) this.renderer.camera.updateWWidth(-this.wWidthFactor);
+        if (this.noSamplesInc) this.renderer.camera.updateNoSamples(this.noSamplesFactor);
+        if (this.noSamplesDec) this.renderer.camera.updateNoSamples(-this.noSamplesFactor);
     }
 }
