@@ -1,7 +1,7 @@
-import { VolumeRenderer } from "./renderer";
+import { RendererMPR } from "./mpr";
 
 export class Controller {
-    private renderer: VolumeRenderer;
+    private renderer: RendererMPR;
     private leftDown: boolean;
     private rightDown: boolean;
     private initPos: [number, number];
@@ -20,9 +20,9 @@ export class Controller {
     private wLevelFactor: number = 0.0001;
     private noSamplesFactor: number = 5;
 
-    constructor(renderer: VolumeRenderer) {
-        this.leftDown = false;
+    constructor(renderer: RendererMPR) {
         this.renderer = renderer;
+        this.leftDown = false;
         this.initPos = [0, 0];
         this.checkResize();
         this.initMouse();
@@ -56,7 +56,7 @@ export class Controller {
         }, false);
 
         // Disable right-click menu
-        this.renderer.canvas.oncontextmenu = function (e) {
+        this.renderer.context.getCanvas().oncontextmenu = function (e) {
             e.preventDefault();
         };
     }
@@ -87,8 +87,7 @@ export class Controller {
 
     private checkResize() {
         window.onresize = () => {
-            if (this.renderer.device != undefined)
-                this.renderer.resizeCanvas(window.innerWidth, window.innerHeight);
+            if (this.renderer.context.getDevice() != undefined) this.renderer.resize(window.innerWidth, window.innerHeight);
         }
     }
 

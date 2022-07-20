@@ -1,6 +1,7 @@
 import { Volume } from './volume';
-import { VolumeRenderer } from './renderer';
+import { RendererMPR } from './mpr';
 import { Controller } from './controller';
+import { Context } from './context';
 
 var width = window.innerWidth;
 var height = window.innerHeight;
@@ -8,13 +9,15 @@ var height = window.innerHeight;
 async function main() {
 
     const volume = await new Volume();
-    const volumeRenderer = new VolumeRenderer(volume, width, height);
-    const controller = new Controller(volumeRenderer);
+    const context = new Context(volume, width, height);
+    const renderer = new RendererMPR(context);
+    const controller = new Controller(renderer);
 
-    await volumeRenderer.start();
+    await context.initWebGPU();
+    await renderer.start();
     
     const run = () => {
-        volumeRenderer.render();
+        renderer.render();
         controller.updateInputs();
         requestAnimationFrame(run);
     }

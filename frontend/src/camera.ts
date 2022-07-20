@@ -1,4 +1,5 @@
 import { mat4, vec3 } from 'gl-matrix';
+import { Volume } from './volume';
 
 export class Camera {
     private viewDirection: vec3 = vec3.create(); // Points towards volume - z-axis for camera
@@ -21,8 +22,8 @@ export class Camera {
     private volumeDataScale: number;
     private maxSamples: number;
 
-    constructor(imageWidth: number, imageHeight: number, volume) {
-        this.imageSize = [imageWidth, imageHeight]
+    constructor(imageSize: number[], volume: Volume) {
+        this.imageSize = imageSize;
         this.volumeBounds = volume.boundingBox;
         this.volumeDataScale = volume.volumeDataScale;
 
@@ -110,5 +111,5 @@ export class Camera {
     public updateWLevel(dl: number) { this.wLevel += dl; }
     public updateNoSamples(ds: number) { if (this.noSamples + ds > 0 && this.noSamples + ds < this.maxSamples) this.noSamples += ds; }
     public updateSlabCentre(dz: number) { this.slabCentre += dz; }
-    public resize(width, height) { this.imageSize = [width, height]; }
+    public resize(width: number, height: number) { this.imageSize = [width, height]; }
 }

@@ -1,4 +1,4 @@
-export const projectionPlane = {
+export const imagePlane = {
     vertexSize: 4 * 2, // Byte size of one vertex
     positionOffset: 0,
     vertexCount: 6,

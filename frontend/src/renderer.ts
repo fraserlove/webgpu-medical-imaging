@@ -1,98 +1,50 @@
-import { Volume } from './volume';
-import { projectionPlane } from './vertices';
+import { Context } from './context';
 import { Camera } from './camera';
+import { imagePlane } from './vertices';
 import render from '../shaders/render.wgsl';
-import mip16 from '../shaders/mip16.wgsl';
-import mip8 from '../shaders/mip8.wgsl';
 
-export class VolumeRenderer {
-    volume: Volume;
+export class Renderer {
+    context: Context;
     camera: Camera;
 
-    wWidth: number;
-    wLevel: number;
     slabCentre: number;
     noSamples: number;
-    MPRShader: any;
-
-    adapter: GPUAdapter;
-    device: GPUDevice;
-    queue: GPUQueue;
-
-    canvas: HTMLCanvasElement;
-    context: GPUCanvasContext;
-    canvasFormat: GPUTextureFormat;
+    shaderType: any;
 
     renderUniformBuffer: GPUBuffer;
-    MPRUniformBuffer: GPUBuffer;
+    computeUniformBuffer: GPUBuffer;
     vertexBuffer: GPUBuffer;
-    MPRTexture: GPUTexture;
+    computeTexture: GPUTexture;
     volumeTexture: GPUTexture;
     sampler: GPUSampler;
 
     renderBindGroupLayout: GPUBindGroupLayout;
-    MPRBindGroupLayout: GPUBindGroupLayout;
+    computeBindGroupLayout: GPUBindGroupLayout;
     renderBindGroup: GPUBindGroup;
-    MPRBindGroup: GPUBindGroup;
+    computeBindGroup: GPUBindGroup;
     renderPipeline: GPURenderPipeline;
-    MPRPipeline: GPURenderPipeline;
-    
+    computePipeline: GPURenderPipeline;
+
     commandEncoder: GPUCommandEncoder;
     renderPassDescriptor: GPURenderPassDescriptor;
 
-    constructor(volume, width, height) {
-        this.volume = volume;
-
-        this.canvas = document.createElement('canvas');
-        document.body.appendChild(this.canvas);
-        this.canvas.width = width;
-        this.canvas.height = height;
-
-        this.camera = new Camera(this.canvas.width, this.canvas.height, this.volume);
-
-        this.MPRShader = mip16
-        if (this.volume.bitsPerVoxel == 8)
-            this.MPRShader = mip8
+    constructor(context: Context) {
+        this.context = context;
+        this.camera = new Camera(this.context.size(), this.context.getVolume());
     }
 
-    public async start() {
-        console.log('Initialising WebGPU...');
-        if (await this.initWebGPU()) {
-            console.log('Creating Pipelines...');
-            this.initPipelines();
-            console.log('Initialising Resources...');
-            this.initBuffers();
-            this.initResources();
-            this.initBindGroups();
-        }
-        else {
-            console.log('WebGPU support not detected.')
-        }
-    }
-
-    private async initWebGPU(): Promise<boolean> {
-        try {
-            this.adapter = await navigator.gpu.requestAdapter();
-            this.device = await this.adapter.requestDevice();
-            this.queue = this.device.queue;
-
-            this.context = this.canvas.getContext('webgpu');
-            this.canvasFormat = navigator.gpu.getPreferredCanvasFormat(),
-            this.context.configure({
-                device: this.device,
-                format: this.canvasFormat,
-                alphaMode: 'premultiplied'
-            });
-        }
-        catch(error) {
-            console.error(error);
-            return false;
-        }
-        return true;
+    public start() {
+        console.log('RENDERER: Creating Pipelines...');
+        this.initPipelines();
+        console.log('RENDERER: Initialising Resources...');
+        this.initBuffers();
+        this.initResources();
+        this.initBindGroups();
+        console.log('RENDERER: Rendering...');
     }
 
     private initPipelines() {
-        this.renderBindGroupLayout = this.device.createBindGroupLayout({
+        this.renderBindGroupLayout = this.context.getDevice().createBindGroupLayout({
             entries: [
                 {
                     binding: 0,
@@ -107,7 +59,7 @@ export class VolumeRenderer {
             ]
         });
 
-        this.MPRBindGroupLayout = this.device.createBindGroupLayout({
+        this.computeBindGroupLayout = this.context.getDevice().createBindGroupLayout({
             entries: [
                 {
                     binding: 0,
@@ -127,21 +79,21 @@ export class VolumeRenderer {
             ]
         });
 
-        this.renderPipeline = this.device.createRenderPipeline({
-            layout: this.device.createPipelineLayout({
+        this.renderPipeline = this.context.getDevice().createRenderPipeline({
+            layout: this.context.getDevice().createPipelineLayout({
                 bindGroupLayouts: [this.renderBindGroupLayout]
             }),
             vertex: {
-                module: this.device.createShaderModule({ code: render }),
+                module: this.context.getDevice().createShaderModule({ code: render }),
                 entryPoint: 'vert_main',
                 buffers: [
                         {
-                        arrayStride: projectionPlane.vertexSize,
+                        arrayStride: imagePlane.vertexSize,
                         attributes: [
                             {
                                 // Position
                                 shaderLocation: 0,
-                                offset: projectionPlane.positionOffset,
+                                offset: imagePlane.positionOffset,
                                 format: 'float32x2',
                             }
                         ]
@@ -149,27 +101,27 @@ export class VolumeRenderer {
                 ]
             },
             fragment: {
-                module: this.device.createShaderModule({ code: render }),
+                module: this.context.getDevice().createShaderModule({ code: render }),
                 entryPoint: 'frag_main',
-                targets: [{ format: this.canvasFormat }]
+                targets: [{ format: this.context.displayFormat() }]
             }
         });
 
-        this.MPRPipeline = this.device.createRenderPipeline({
-            layout: this.device.createPipelineLayout({
-                bindGroupLayouts: [this.MPRBindGroupLayout]
+        this.computePipeline = this.context.getDevice().createRenderPipeline({
+            layout: this.context.getDevice().createPipelineLayout({
+                bindGroupLayouts: [this.computeBindGroupLayout]
             }),
             vertex: {
-                module: this.device.createShaderModule({ code: this.MPRShader }),
+                module: this.context.getDevice().createShaderModule({ code: this.shaderType }),
                 entryPoint: 'vert_main',
                 buffers: [
                         {
-                        arrayStride: projectionPlane.vertexSize,
+                        arrayStride: imagePlane.vertexSize,
                         attributes: [
                             {
                                 // Position
                                 shaderLocation: 0,
-                                offset: projectionPlane.positionOffset,
+                                offset: imagePlane.positionOffset,
                                 format: 'float32x2',
                             }
                         ]
@@ -177,7 +129,7 @@ export class VolumeRenderer {
                 ]
             },
             fragment: {
-                module: this.device.createShaderModule({ code: this.MPRShader }),
+                module: this.context.getDevice().createShaderModule({ code: this.shaderType }),
                 entryPoint: 'frag_main',
                 targets: [{ format: 'rgba16float' }]
             }
@@ -185,52 +137,52 @@ export class VolumeRenderer {
     }
 
     private initBuffers() {
-        this.renderUniformBuffer = this.device.createBuffer({
+        this.renderUniformBuffer = this.context.getDevice().createBuffer({
             size: this.camera.getWWidthLevel().byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
-        this.MPRUniformBuffer = this.device.createBuffer({
-            size: this.getMPRUniformData().byteLength,
+        this.computeUniformBuffer = this.context.getDevice().createBuffer({
+            size: this.getComputeUniformData().byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
-        this.vertexBuffer = this.device.createBuffer({
-            size: projectionPlane.vertices.byteLength,
+        this.vertexBuffer = this.context.getDevice().createBuffer({
+            size: imagePlane.vertices.byteLength,
             usage: GPUBufferUsage.VERTEX,
             mappedAtCreation: true
         });
-        new Float32Array(this.vertexBuffer.getMappedRange()).set(projectionPlane.vertices);
+        new Float32Array(this.vertexBuffer.getMappedRange()).set(imagePlane.vertices);
         this.vertexBuffer.unmap();
     }
 
     private initResources() {
-        this.sampler = this.device.createSampler({
+        this.sampler = this.context.getDevice().createSampler({
             magFilter: 'linear',
             minFilter: 'linear'
         });
 
-        this.MPRTexture = this.device.createTexture({
-            size: [this.canvas.width, this.canvas.height],
+        this.computeTexture = this.context.getDevice().createTexture({
+            size: this.context.size(),
             format: 'rgba16float',
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
         });
 
-        this.volumeTexture = this.device.createTexture({
-            size: [this.volume.width, this.volume.height, this.volume.depth],
+        this.volumeTexture = this.context.getDevice().createTexture({
+            size: this.context.getVolume().size(),
             // rg8unorm or r8unorm - red(low bits), green(high bits)
-            format: this.volume.textureFormat,
+            format: this.context.getVolume().textureFormat,
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
             dimension: '3d'
         });
 
         const imageDataLayout = {
             offset: 0,
-            bytesPerRow: this.volume.bytesPerLine,
-            rowsPerImage: this.volume.height
+            bytesPerRow: this.context.getVolume().bytesPerLine,
+            rowsPerImage: this.context.getVolume().height
         };
 
-        this.queue.writeTexture({ texture: this.volumeTexture }, this.volume.data, imageDataLayout, this.volume.size());
+        this.context.getQueue().writeTexture({ texture: this.volumeTexture }, this.context.getVolume().data, imageDataLayout, this.context.getVolume().size());
 
         this.renderPassDescriptor = {
             colorAttachments: [{
@@ -243,67 +195,65 @@ export class VolumeRenderer {
     }
 
     private initBindGroups() {
-        this.MPRBindGroup = this.device.createBindGroup({
-            layout: this.MPRBindGroupLayout,
+        this.computeBindGroup = this.context.getDevice().createBindGroup({
+            layout: this.computeBindGroupLayout,
             entries: [
-                { binding: 0, resource: { buffer: this.MPRUniformBuffer } },
+                { binding: 0, resource: { buffer: this.computeUniformBuffer } },
                 { binding: 1, resource: this.volumeTexture.createView() },
                 { binding: 2, resource: this.sampler }
             ]
         });
 
-        this.renderBindGroup = this.device.createBindGroup({
+        this.renderBindGroup = this.context.getDevice().createBindGroup({
             layout: this.renderBindGroupLayout,
             entries: [
                 { binding: 0, resource: { buffer: this.renderUniformBuffer } },
-                { binding: 1, resource: this.MPRTexture.createView() },
+                { binding: 1, resource: this.computeTexture.createView() },
             ]
         });
     }
 
-    private executeMPRPipeline() {
-        this.renderPassDescriptor.colorAttachments[0].view = this.MPRTexture.createView();
+    private executeComputePipeline() {
+        this.renderPassDescriptor.colorAttachments[0].view = this.computeTexture.createView();
         const passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
-        passEncoder.setPipeline(this.MPRPipeline);
-        this.queue.writeBuffer(this.MPRUniformBuffer, 0, this.getMPRUniformData());
-        passEncoder.setBindGroup(0, this.MPRBindGroup);
+        passEncoder.setPipeline(this.computePipeline);
+        this.context.getQueue().writeBuffer(this.computeUniformBuffer, 0, this.getComputeUniformData());
+        passEncoder.setBindGroup(0, this.computeBindGroup);
         passEncoder.setVertexBuffer(0, this.vertexBuffer);
-        passEncoder.draw(projectionPlane.vertexCount);
+        passEncoder.draw(imagePlane.vertexCount);
         passEncoder.end();
     }
 
     private executeRenderPipeline() {
-        this.renderPassDescriptor.colorAttachments[0].view = this.context.getCurrentTexture().createView();
+        this.renderPassDescriptor.colorAttachments[0].view = this.context.getCanvasContext().getCurrentTexture().createView();
         const passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
         passEncoder.setPipeline(this.renderPipeline);
-        this.queue.writeBuffer(this.renderUniformBuffer, 0, this.camera.getWWidthLevel());
+        this.context.getQueue().writeBuffer(this.renderUniformBuffer, 0, this.camera.getWWidthLevel());
         passEncoder.setBindGroup(0, this.renderBindGroup);
         passEncoder.setVertexBuffer(0, this.vertexBuffer);
-        passEncoder.draw(projectionPlane.vertexCount);
+        passEncoder.draw(imagePlane.vertexCount);
         passEncoder.end();
     }
 
-    private getMPRUniformData() {
+    private getComputeUniformData() {
         var MPRUniformData = new Float32Array(this.camera.getViewMatrix().length + 2);
         MPRUniformData.set([...this.camera.getViewMatrix(), ...this.camera.getSampleInfo()]);
         return MPRUniformData;
     }
 
     public render() {
-        this.commandEncoder = this.device.createCommandEncoder();
-        this.executeMPRPipeline();
+        this.commandEncoder = this.context.getDevice().createCommandEncoder();
+        this.executeComputePipeline();
         this.executeRenderPipeline();
-        this.queue.submit([this.commandEncoder.finish()]);
+        this.context.getQueue().submit([this.commandEncoder.finish()]);
     }
 
-    public resizeCanvas(width, height) {
-        // Called exclusively when user resizes browser window
-        this.canvas.width = width;
-        this.canvas.height = height;
-        this.camera.resize(this.canvas.width, this.canvas.height);
+    public resize(width: number, height: number) {
+        this.context.resize(width, height);
+        this.camera.resize(width, height);
         
-        this.MPRTexture = this.device.createTexture({
-            size: [this.canvas.width, this.canvas.height],
+        this.computeTexture = this.context.getDevice().createTexture({
+            size: this.context.size(),
             format: 'rgba16float',
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
         }); 
