@@ -24,12 +24,12 @@ export class Camera {
 
     constructor(imageSize: number[], volume: Volume) {
         this.imageSize = imageSize;
-        this.volumeBounds = volume.boundingBox;
-        this.volumeDataScale = volume.volumeDataScale;
+        this.volumeBounds = volume.getBoundingBox();
+        this.volumeDataScale = volume.volumeDataScale();
 
-        this.slabCentre = volume.depth / 2;
-        this.noSamples = volume.depth;
-        this.maxSamples = volume.depth;
+        this.slabCentre = volume.getDepth() / 2;
+        this.noSamples = volume.getDepth();
+        this.maxSamples = volume.getDepth();
 
         this.setScale(0.4);
         this.setPanCine(0, 0, this.volumeBounds[2] / 2);
@@ -60,13 +60,13 @@ export class Camera {
         mat4.invert(this.view, this.camera);
     }
 
-    public getCameraMatrix() { this.CalculateViewMatrix(); return this.camera as Float32Array; }
-    public getViewMatrix() { this.CalculateViewMatrix(); return this.view as Float32Array; }
-    public getWWidthLevel() { return new Float32Array([this.wWidth, this.wLevel]); }
-    public getSampleInfo() { return new Float32Array([this.slabCentre, this.noSamples])} 
+    public getCameraMatrix(): Float32Array { this.CalculateViewMatrix(); return this.camera as Float32Array; }
+    public getViewMatrix(): Float32Array { this.CalculateViewMatrix(); return this.view as Float32Array; }
+    public getWWidthLevel(): Float32Array { return new Float32Array([this.wWidth, this.wLevel]); }
+    public getSampleInfo(): Float32Array { return new Float32Array([this.slabCentre, this.noSamples])} 
 
-    private volumeCentre() { return vec3.fromValues(-this.volumeBounds[0] / 2, -this.volumeBounds[1] / 2, -this.volumeBounds[2] / 2); }
-    private imageCentre() { return vec3.fromValues(this.imageSize[0] / 2, this.imageSize[1] / 2, 0); }
+    private volumeCentre(): vec3 { return vec3.fromValues(-this.volumeBounds[0] / 2, -this.volumeBounds[1] / 2, -this.volumeBounds[2] / 2); }
+    private imageCentre(): vec3 { return vec3.fromValues(this.imageSize[0] / 2, this.imageSize[1] / 2, 0); }
 
     private setViewDirection(viewDirection: vec3, viewUp: vec3) {
         let viewSide: vec3 = vec3.create();

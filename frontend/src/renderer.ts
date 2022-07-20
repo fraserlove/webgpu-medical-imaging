@@ -1,7 +1,6 @@
 import { Context } from './context';
 import { Camera } from './camera';
 import { imagePlane } from './vertices';
-import render from '../shaders/render.wgsl';
 
 export class Renderer {
     context: Context;
@@ -9,7 +8,9 @@ export class Renderer {
 
     slabCentre: number;
     noSamples: number;
-    shaderType: any;
+
+    computeShaderType: any;
+    renderShaderType: any;
 
     renderUniformBuffer: GPUBuffer;
     computeUniformBuffer: GPUBuffer;
@@ -84,7 +85,7 @@ export class Renderer {
                 bindGroupLayouts: [this.renderBindGroupLayout]
             }),
             vertex: {
-                module: this.context.getDevice().createShaderModule({ code: render }),
+                module: this.context.getDevice().createShaderModule({ code: this.renderShaderType }),
                 entryPoint: 'vert_main',
                 buffers: [
                         {
@@ -101,7 +102,7 @@ export class Renderer {
                 ]
             },
             fragment: {
-                module: this.context.getDevice().createShaderModule({ code: render }),
+                module: this.context.getDevice().createShaderModule({ code: this.renderShaderType }),
                 entryPoint: 'frag_main',
                 targets: [{ format: this.context.displayFormat() }]
             }
@@ -112,7 +113,7 @@ export class Renderer {
                 bindGroupLayouts: [this.computeBindGroupLayout]
             }),
             vertex: {
-                module: this.context.getDevice().createShaderModule({ code: this.shaderType }),
+                module: this.context.getDevice().createShaderModule({ code: this.computeShaderType }),
                 entryPoint: 'vert_main',
                 buffers: [
                         {
@@ -129,7 +130,7 @@ export class Renderer {
                 ]
             },
             fragment: {
-                module: this.context.getDevice().createShaderModule({ code: this.shaderType }),
+                module: this.context.getDevice().createShaderModule({ code: this.computeShaderType }),
                 entryPoint: 'frag_main',
                 targets: [{ format: 'rgba16float' }]
             }
@@ -138,7 +139,7 @@ export class Renderer {
 
     private initBuffers() {
         this.renderUniformBuffer = this.context.getDevice().createBuffer({
-            size: this.camera.getWWidthLevel().byteLength,
+            size: this.getRenderUniformData().byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
@@ -171,18 +172,18 @@ export class Renderer {
         this.volumeTexture = this.context.getDevice().createTexture({
             size: this.context.getVolume().size(),
             // rg8unorm or r8unorm - red(low bits), green(high bits)
-            format: this.context.getVolume().textureFormat,
+            format: this.context.getVolume().getTextureFormat(),
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
             dimension: '3d'
         });
 
         const imageDataLayout = {
             offset: 0,
-            bytesPerRow: this.context.getVolume().bytesPerLine,
-            rowsPerImage: this.context.getVolume().height
+            bytesPerRow: this.context.getVolume().getBytesPerLine(),
+            rowsPerImage: this.context.getVolume().getHeight()
         };
 
-        this.context.getQueue().writeTexture({ texture: this.volumeTexture }, this.context.getVolume().data, imageDataLayout, this.context.getVolume().size());
+        this.context.getQueue().writeTexture({ texture: this.volumeTexture }, this.context.getVolume().getData(), imageDataLayout, this.context.getVolume().size());
 
         this.renderPassDescriptor = {
             colorAttachments: [{
@@ -228,17 +229,21 @@ export class Renderer {
         this.renderPassDescriptor.colorAttachments[0].view = this.context.getCanvasContext().getCurrentTexture().createView();
         const passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
         passEncoder.setPipeline(this.renderPipeline);
-        this.context.getQueue().writeBuffer(this.renderUniformBuffer, 0, this.camera.getWWidthLevel());
+        this.context.getQueue().writeBuffer(this.renderUniformBuffer, 0, this.getRenderUniformData());
         passEncoder.setBindGroup(0, this.renderBindGroup);
         passEncoder.setVertexBuffer(0, this.vertexBuffer);
         passEncoder.draw(imagePlane.vertexCount);
         passEncoder.end();
     }
 
-    private getComputeUniformData() {
-        var MPRUniformData = new Float32Array(this.camera.getViewMatrix().length + 2);
-        MPRUniformData.set([...this.camera.getViewMatrix(), ...this.camera.getSampleInfo()]);
-        return MPRUniformData;
+    protected getRenderUniformData(): Float32Array {
+        return new Float32Array();
+    }
+
+    private getComputeUniformData(): Float32Array {
+        let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + 2);
+        computeUniformData.set([...this.camera.getViewMatrix(), ...this.camera.getSampleInfo()]);
+        return computeUniformData;
     }
 
     public render() {

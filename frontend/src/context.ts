@@ -20,13 +20,13 @@ export class Context {
         this.canvas.height = height;
     }
 
-    public getVolume() { return this.volume; }
-    public getDevice() { return this.device; }
-    public getQueue() { return this.queue; }
-    public getCanvas() { return this.canvas; }
-    public getCanvasContext() { return this.context; }
-    public size() { return [this.canvas.width, this.canvas.height]; }
-    public displayFormat() { return this.canvasFormat; }
+    public getVolume(): Volume { return this.volume; }
+    public getDevice(): GPUDevice { return this.device; }
+    public getQueue(): GPUQueue { return this.queue; }
+    public getCanvas(): HTMLCanvasElement { return this.canvas; }
+    public getCanvasContext(): GPUCanvasContext { return this.context; }
+    public size(): number[] { return [this.canvas.width, this.canvas.height]; }
+    public displayFormat(): GPUTextureFormat { return this.canvasFormat; }
 
     public resize(width: number, height: number) {
         this.canvas.width = width;

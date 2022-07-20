@@ -2,15 +2,14 @@ const axios = require('axios');
 
 export class Volume {
     
-    width: number;
-    height: number;
-    depth: number;
-    bitsPerVoxel: number;
-    bytesPerLine: number;
-    boundingBox: number[];
-    data: ArrayBuffer;
-    volumeDataScale: number;
-    textureFormat: any;
+    private width: number;
+    private height: number;
+    private depth: number;
+    private bitsPerVoxel: number;
+    private bytesPerLine: number;
+    private boundingBox: number[];
+    private data: ArrayBuffer;
+    private textureFormat: any;
 
     constructor() {
         return (async (): Promise<Volume> => {
@@ -27,6 +26,7 @@ export class Volume {
         const bytesPerLine = await axios.get('http://localhost:8080/volume/bytes_per_line');
         const boundingBox = await axios.get('http://localhost:8080/volume/bounding_box');
         const data = await axios.get('http://localhost:8080/volume/data', { responseType: 'arraybuffer' });
+
         this.width = width.data;
         this.height = height.data;
         this.depth = depth.data;
@@ -34,25 +34,24 @@ export class Volume {
         this.bytesPerLine = bytesPerLine.data;
         this.boundingBox = boundingBox.data.substr(1, boundingBox.data.length-2).split(",");;
         this.data = data.data;
-        this.volumeDataScale = this.boundingBox[2] / this.depth;
+
         this.findFormat();
     }
 
     private findFormat() {
-        if (this.bitsPerVoxel == 8) 
-            this.textureFormat = 'r8unorm';
-        else if (this.bitsPerVoxel == 16)
-            this.textureFormat = 'rg8unorm';
-        else
-            console.error('Invalid pixel format for texture.');
+        if (this.bitsPerVoxel == 8) this.textureFormat = 'r8unorm';
+        else if (this.bitsPerVoxel == 16) this.textureFormat = 'rg8unorm';
+        else console.error('Invalid pixel format for texture.');
     }
 
-    public size() {
-        return [this.width, this.height, this.depth];
-    }
-
-    public maxDimension() {
-        return Math.max(...this.boundingBox);
-    }
+    public getBytesPerLine(): number { return this.bytesPerLine; }
+    public getBoundingBox(): number[] { return this.boundingBox; }
+    public getData(): ArrayBuffer { return this.data; }
+    public getTextureFormat(): any { return this.textureFormat; }
+    public getBitsPerVoxel(): number { return this.bitsPerVoxel; }
+    public size(): number[] { return [this.width, this.height, this.depth]; }
+    public getDepth(): number { return this.depth; }
+    public getHeight(): number { return this.height; }
+    public volumeDataScale(): number { return this.boundingBox[2] / this.depth; }
 
 }
