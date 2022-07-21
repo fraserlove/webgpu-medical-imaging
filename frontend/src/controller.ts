@@ -1,7 +1,7 @@
-import { RendererMPR } from "./mpr";
+import { Renderer } from "./renderer";
 
 export class Controller {
-    private renderer: RendererMPR;
+    private renderer: Renderer;
     private leftDown: boolean;
     private rightDown: boolean;
     private initPos: [number, number];
@@ -20,7 +20,7 @@ export class Controller {
     private wLevelFactor: number = 0.0001;
     private noSamplesFactor: number = 5;
 
-    constructor(renderer: RendererMPR) {
+    constructor(renderer: Renderer) {
         this.renderer = renderer;
         this.leftDown = false;
         this.initPos = [0, 0];

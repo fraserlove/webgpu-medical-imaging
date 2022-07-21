@@ -237,7 +237,7 @@ export class Renderer {
     }
 
     protected getRenderUniformData(): Float32Array {
-        return new Float32Array();
+        return new Float32Array(1);
     }
 
     private getComputeUniformData(): Float32Array {

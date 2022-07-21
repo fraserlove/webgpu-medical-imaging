@@ -19,21 +19,15 @@ export class Volume {
     }
 
     async loadData() {
-        const width = await axios.get('http://localhost:8080/volume/width');
-        const height = await axios.get('http://localhost:8080/volume/height');
-        const depth = await axios.get('http://localhost:8080/volume/image_count');
-        const bitsPerVoxel = await axios.get('http://localhost:8080/volume/bits_per_voxel');
-        const bytesPerLine = await axios.get('http://localhost:8080/volume/bytes_per_line');
-        const boundingBox = await axios.get('http://localhost:8080/volume/bounding_box');
-        const data = await axios.get('http://localhost:8080/volume/data', { responseType: 'arraybuffer' });
+        this.width = (await axios.get('http://localhost:8080/volume/width')).data;
+        this.height = (await axios.get('http://localhost:8080/volume/height')).data;
+        this.depth = (await axios.get('http://localhost:8080/volume/image_count')).data;
+        this.bitsPerVoxel = (await axios.get('http://localhost:8080/volume/bits_per_voxel')).data;
+        this.bytesPerLine = (await axios.get('http://localhost:8080/volume/bytes_per_line')).data;
+        this.data = (await axios.get('http://localhost:8080/volume/data', { responseType: 'arraybuffer' })).data;
 
-        this.width = width.data;
-        this.height = height.data;
-        this.depth = depth.data;
-        this.bitsPerVoxel = bitsPerVoxel.data;
-        this.bytesPerLine = bytesPerLine.data;
-        this.boundingBox = boundingBox.data.substr(1, boundingBox.data.length-2).split(",");;
-        this.data = data.data;
+        let boundingBox = (await axios.get('http://localhost:8080/volume/bounding_box')).data;
+        this.boundingBox = boundingBox.substr(1, boundingBox.length-2).split(",");;
 
         this.findFormat();
     }
