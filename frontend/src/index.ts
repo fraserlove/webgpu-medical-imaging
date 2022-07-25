@@ -5,7 +5,7 @@ import { RendererSVR } from './svr';
 import { Controller } from './controller';
 import { Context } from './context';
 
-async function main() {
+async function main(): Promise<void> {
 
     const volume = await new Volume();
     const transferFunction = await new TransferFunction();

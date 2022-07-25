@@ -19,7 +19,7 @@ fn frag_main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
     var maxIntensity: f32 = 0; // Only dealing with unsigned integers
     var start = i32(uniforms.slabCentre - uniforms.noSamples / 2);
     var end = i32(uniforms.slabCentre + uniforms.noSamples / 2);
-    //for (var k = 0; k < i32(size.z); k++) {
+    
     for (var k = start; k < end; k++) {
         var transformed = uniforms.transform * vec4<f32>(coord.xy, f32(k), 1.0);
         // Scale down transformed coordinates to fit within 0->1 range

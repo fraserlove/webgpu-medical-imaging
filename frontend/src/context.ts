@@ -28,7 +28,7 @@ export class Context {
     public size(): number[] { return [this.canvas.width, this.canvas.height]; }
     public displayFormat(): GPUTextureFormat { return this.canvasFormat; }
 
-    public resize(width: number, height: number) {
+    public resize(width: number, height: number): void {
         this.canvas.width = width;
         this.canvas.height = height;
     }

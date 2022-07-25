@@ -9,7 +9,7 @@ export class Volume {
     private bytesPerLine: number;
     private boundingBox: number[];
     private data: ArrayBuffer;
-    private textureFormat: any;
+    private textureFormat: string;
 
     constructor() {
         return (async (): Promise<Volume> => {
@@ -18,7 +18,7 @@ export class Volume {
           })() as unknown as Volume;
     }
 
-    async loadData() {
+    async loadData(): Promise<void> {
         this.width = (await axios.get('http://localhost:8080/volume/width')).data;
         this.height = (await axios.get('http://localhost:8080/volume/height')).data;
         this.depth = (await axios.get('http://localhost:8080/volume/image_count')).data;
@@ -32,16 +32,16 @@ export class Volume {
         this.findFormat();
     }
 
-    private findFormat() {
+    private findFormat(): void {
         if (this.bitsPerVoxel == 8) this.textureFormat = 'r8unorm';
         else if (this.bitsPerVoxel == 16) this.textureFormat = 'rg8unorm';
-        else console.error('Invalid pixel format for texture.');
+        else console.error('Invalid pixel format for volume texture.');
     }
 
     public getBytesPerLine(): number { return this.bytesPerLine; }
     public getBoundingBox(): number[] { return this.boundingBox; }
     public getData(): ArrayBuffer { return this.data; }
-    public getTextureFormat(): any { return this.textureFormat; }
+    public getTextureFormat(): any { return this.textureFormat as any; }
     public getBitsPerVoxel(): number { return this.bitsPerVoxel; }
     public size(): number[] { return [this.width, this.height, this.depth]; }
     public getDepth(): number { return this.depth; }

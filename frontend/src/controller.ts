@@ -29,7 +29,7 @@ export class Controller {
         this.initKeyboard();
     }
 
-    private initMouse() {
+    private initMouse(): void {
         // Mouse zoom
         document.addEventListener('wheel', (e: WheelEvent) => {
             e.preventDefault(); // Disables backwards page-navigation on horizontal scroll
@@ -61,7 +61,7 @@ export class Controller {
         };
     }
 
-    private initKeyboard() {
+    private initKeyboard(): void {
         // Arrow controls
         document.addEventListener('keydown', (e : KeyboardEvent) => {
             switch(e.key) {
@@ -85,13 +85,13 @@ export class Controller {
         }, false);
     }
 
-    private checkResize() {
+    private checkResize(): void {
         window.onresize = () => {
             if (this.renderer.context.getDevice() != undefined) this.renderer.resize(window.innerWidth, window.innerHeight);
         }
     }
 
-    public updateInputs() {
+    public updateInputs(): void {
         if (this.wLevelInc) this.renderer.camera.updateWLevel(this.wLevelFactor);
         if (this.wLevelDec) this.renderer.camera.updateWLevel(-this.wLevelFactor);
         if (this.wWidthInc) this.renderer.camera.updateWWidth(this.wWidthFactor);

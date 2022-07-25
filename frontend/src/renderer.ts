@@ -34,8 +34,9 @@ export class Renderer {
         this.camera = new Camera(this.context.size(), this.context.getVolume());
     }
 
-    public start() {
+    public start(): void {
         console.log('RENDERER: Creating Pipelines...');
+        this.initPipelineLayouts();
         this.initPipelines();
         console.log('RENDERER: Initialising Resources...');
         this.initBuffers();
@@ -44,7 +45,7 @@ export class Renderer {
         console.log('RENDERER: Rendering...');
     }
 
-    private initPipelines() {
+    protected initPipelineLayouts(): void {
         this.renderBindGroupLayout = this.context.getDevice().createBindGroupLayout({
             entries: [
                 {
@@ -79,7 +80,9 @@ export class Renderer {
                 } as GPUBindGroupLayoutEntry
             ]
         });
+    }
 
+    private initPipelines(): void {
         this.renderPipeline = this.context.getDevice().createRenderPipeline({
             layout: this.context.getDevice().createPipelineLayout({
                 bindGroupLayouts: [this.renderBindGroupLayout]
@@ -137,7 +140,7 @@ export class Renderer {
         });
     }
 
-    private initBuffers() {
+    private initBuffers(): void {
         this.renderUniformBuffer = this.context.getDevice().createBuffer({
             size: this.getRenderUniformData().byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
@@ -157,7 +160,7 @@ export class Renderer {
         this.vertexBuffer.unmap();
     }
 
-    private initResources() {
+    protected initResources(): void {
         this.sampler = this.context.getDevice().createSampler({
             magFilter: 'linear',
             minFilter: 'linear'
@@ -195,16 +198,7 @@ export class Renderer {
         };
     }
 
-    private initBindGroups() {
-        this.computeBindGroup = this.context.getDevice().createBindGroup({
-            layout: this.computeBindGroupLayout,
-            entries: [
-                { binding: 0, resource: { buffer: this.computeUniformBuffer } },
-                { binding: 1, resource: this.volumeTexture.createView() },
-                { binding: 2, resource: this.sampler }
-            ]
-        });
-
+    protected initBindGroups(): void {
         this.renderBindGroup = this.context.getDevice().createBindGroup({
             layout: this.renderBindGroupLayout,
             entries: [
@@ -214,7 +208,7 @@ export class Renderer {
         });
     }
 
-    private executeComputePipeline() {
+    private executeComputePipeline(): void {
         this.renderPassDescriptor.colorAttachments[0].view = this.computeTexture.createView();
         const passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
         passEncoder.setPipeline(this.computePipeline);
@@ -225,7 +219,7 @@ export class Renderer {
         passEncoder.end();
     }
 
-    private executeRenderPipeline() {
+    private executeRenderPipeline(): void {
         this.renderPassDescriptor.colorAttachments[0].view = this.context.getCanvasContext().getCurrentTexture().createView();
         const passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
         passEncoder.setPipeline(this.renderPipeline);
@@ -240,20 +234,20 @@ export class Renderer {
         return new Float32Array(1);
     }
 
-    private getComputeUniformData(): Float32Array {
+    protected getComputeUniformData(): Float32Array {
         let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + 2);
         computeUniformData.set([...this.camera.getViewMatrix(), ...this.camera.getSampleInfo()]);
         return computeUniformData;
     }
 
-    public render() {
+    public render(): void {
         this.commandEncoder = this.context.getDevice().createCommandEncoder();
         this.executeComputePipeline();
         this.executeRenderPipeline();
         this.context.getQueue().submit([this.commandEncoder.finish()]);
     }
 
-    public resize(width: number, height: number) {
+    public resize(width: number, height: number): void {
         this.context.resize(width, height);
         this.camera.resize(width, height);
         

@@ -1,8 +1,10 @@
+import { Context } from './context';
 const axios = require('axios');
 
 export class TransferFunction {
-    
-    private size: number;
+
+    private width: number;
+    private noColours: number;
     private colourFormat: string;
     private data: ArrayBuffer;
 
@@ -14,13 +16,24 @@ export class TransferFunction {
     }
 
     async loadData() {
-        this.size = (await axios.get('http://localhost:8080/transfer_function/size')).data;
-        this.colourFormat = (await axios.get('http://localhost:8080/transfer_function/format')).data;
+        this.noColours = (await axios.get('http://localhost:8080/transfer_function/size')).data;
         this.data = (await axios.get('http://localhost:8080/transfer_function/data', { responseType: 'arraybuffer' })).data;
+        
+        let format = (await axios.get('http://localhost:8080/transfer_function/format')).data;
+        this.findFormat(format);
     }
 
-    public getSize(): number { return this.size; }
-    public getColourFormat(): any { return this.colourFormat; }
+    private findFormat(format: string) {
+        if (format == 'rgba32f') this.colourFormat = 'rgba32float';
+        else console.error('Invalid pixel format for transfer function texture.');
+    }
+
+    public setWidth(width): void { this.width = width; }
+    public getWidth(): number { return this.width; }
+    public size(): number[] { return [this.width, this.noColours / this.width]; }
+    public getBytesPerRow(): number { return this.width * 4 * 4; }
+    public getRowsPerImage(): number { return this.noColours / this.width; }
+    public getColourFormat(): any { return this.colourFormat as any; }
     public getData(): ArrayBuffer { return this.data; }
 
 }

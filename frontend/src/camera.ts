@@ -36,7 +36,7 @@ export class Camera {
         this.setViewDirection(vec3.fromValues(1, 0, 0), vec3.fromValues(0, -1, 0));
     }
 
-    private CalculateViewMatrix() {
+    private CalculateViewMatrix(): void {
         this.camera = mat4.create();
 
         let viewBasisMatrix: mat4 = mat4.fromValues(
@@ -68,7 +68,7 @@ export class Camera {
     private volumeCentre(): vec3 { return vec3.fromValues(-this.volumeBounds[0] / 2, -this.volumeBounds[1] / 2, -this.volumeBounds[2] / 2); }
     private imageCentre(): vec3 { return vec3.fromValues(this.imageSize[0] / 2, this.imageSize[1] / 2, 0); }
 
-    private setViewDirection(viewDirection: vec3, viewUp: vec3) {
+    private setViewDirection(viewDirection: vec3, viewUp: vec3): void {
         let viewSide: vec3 = vec3.create();
         vec3.cross(viewSide, viewDirection, viewUp);
         vec3.cross(this.viewUp, viewDirection, viewSide);
@@ -76,40 +76,41 @@ export class Camera {
         this.viewSide = viewSide;
     }
 
-    private setScale(s: number) {
+    private setScale(s: number): void {
         if (s > 0) this.scale = vec3.fromValues(s, s, 1);
     }
 
-    private setPanCine(x: number, y: number, z: number) {
+    private setPanCine(x: number, y: number, z: number): void {
         this.imageSpacePanCine = vec3.fromValues(x, y, z);
     }
 
-    public updateCine(dz: number) {
+    public updateCine(dz: number): void {
         this.imageSpacePanCine[2] += dz;
     }
 
-    public updatePan(dx: number, dy: number) {
+    public updatePan(dx: number, dy: number): void {
         this.imageSpacePanCine[0] += dx / this.scale[0];
         this.imageSpacePanCine[1] += dy / this.scale[1];
     }
 
-    public updateScale(ds: number) {
+    public updateScale(ds: number): void {
         if (this.scale[0] + ds > 0) {
             this.scale[0] += ds;
             this.scale[1] += ds;
         }
     }
 
-    public updateRotation(dx: number, dy: number) {
+    public updateRotation(dx: number, dy: number): void {
         vec3.transformMat4(this.viewDirection, this.viewDirection, mat4.fromRotation(mat4.create(), dx, this.viewUp));
         vec3.transformMat4(this.viewSide, this.viewSide, mat4.fromRotation(mat4.create(), dx, this.viewUp));
         vec3.transformMat4(this.viewDirection, this.viewDirection, mat4.fromRotation(mat4.create(), dy, this.viewSide));
         vec3.transformMat4(this.viewUp, this.viewUp, mat4.fromRotation(mat4.create(), dy, this.viewSide));
     }
 
-    public updateWWidth(dw: number) { this.wWidth += dw; }
-    public updateWLevel(dl: number) { this.wLevel += dl; }
-    public updateNoSamples(ds: number) { if (this.noSamples + ds > 0 && this.noSamples + ds < this.maxSamples) this.noSamples += ds; }
-    public updateSlabCentre(dz: number) { this.slabCentre += dz; }
-    public resize(width: number, height: number) { this.imageSize = [width, height]; }
+    public updateWWidth(dw: number): void { this.wWidth += dw; }
+    public updateWLevel(dl: number): void { this.wLevel += dl; }
+    public updateNoSamples(ds: number): void { if (this.noSamples + ds > 0 && this.noSamples + ds < this.maxSamples) this.noSamples += ds; }
+    public updateSlabCentre(dz: number): void { this.slabCentre += dz; }
+    public resize(width: number, height: number): void { this.imageSize = [width, height]; }
+    public setNoSamples(s: number): void { this.noSamples = s; }
 }
