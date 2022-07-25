@@ -69,7 +69,7 @@ export class Controller {
                 case 'ArrowLeft': this.wLevelDec = true; break;
                 case 'ArrowDown': this.wWidthDec = true; break;
                 case 'ArrowRight': this.wLevelInc = true; break;
-                case '+': this.noSamplesInc = true; break;
+                case '=': this.noSamplesInc = true; break;
                 case '-': this.noSamplesDec = true; break;
             }
         }, false);
@@ -79,8 +79,8 @@ export class Controller {
                 case 'ArrowLeft': this.wLevelDec = false; break;
                 case 'ArrowDown': this.wWidthDec = false; break;
                 case 'ArrowRight': this.wLevelInc = false; break;
-                case '+': this.noSamplesInc = false; break;
-                case '-': this.noSamplesDec = false; break;
+                case '+': case '=': this.noSamplesInc = false; break;
+                case '-': case '_': this.noSamplesDec = false; break;
             }
         }, false);
     }
