@@ -17,7 +17,6 @@ export class RendererSVR extends Renderer {
         this.renderShaderType = svr;
         if (this.context.getVolume().getBitsPerVoxel() == 8) this.computeShaderType = ea8;
         else if (this.context.getVolume().getBitsPerVoxel() == 16) this.computeShaderType = ea16;
-        // this.camera.setNoSamples(100);
     }
 
     public start(): void {
@@ -88,8 +87,8 @@ export class RendererSVR extends Renderer {
     }
 
     protected getComputeUniformData(): Float32Array {
-        let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + 3);
-        computeUniformData.set([...this.camera.getViewMatrix(), ...this.camera.getSampleInfo(), this.transferFunction.getWidth()]);
+        let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + 1);
+        computeUniformData.set([...this.camera.getViewMatrix(), this.transferFunction.getWidth()]);
         return computeUniformData;
     }
 
