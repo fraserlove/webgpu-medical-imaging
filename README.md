@@ -26,4 +26,4 @@ The Node.js server runs on port `8080` and can be accessed in the browser by goi
 ## Controls and Keybindings
 Once the application has loaded, you can left click and drag to rotate, right click and drag to pan, scroll vertically to 
 zoom and scroll horizontally to cine. The left-right and up-down arrow keys are used to change the window level and window 
-width values respectively. The number of samples can be varied using the `+` and `-` keys.
+width values respectively. The number of samples can be varied using the `+` and `-` keys. The direction of the light source in the SVR renderer can be updated using `Shift` and dragging with the left mouse button.
