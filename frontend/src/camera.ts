@@ -15,6 +15,8 @@ export class Camera {
     private wWidth: number = 1000.0/65535.0;
     private wLevel: number = 0.498;
 
+    private lightDir: vec3;
+
     private imageSize: number[];
     private volumeBounds: number[];
     private slabCentre: number;
@@ -30,6 +32,8 @@ export class Camera {
         this.slabCentre = volume.getDepth() / 2;
         this.noSamples = volume.getDepth();
         this.maxSamples = volume.getDepth();
+
+        this.lightDir = vec3.fromValues(-0.5, -0.5, 0.5);
 
         this.setScale(0.4);
         this.setPanCine(0, 0, this.volumeBounds[2] / 2);
@@ -63,7 +67,8 @@ export class Camera {
     public getCameraMatrix(): Float32Array { this.CalculateViewMatrix(); return this.camera as Float32Array; }
     public getViewMatrix(): Float32Array { this.CalculateViewMatrix(); return this.view as Float32Array; }
     public getWWidthLevel(): Float32Array { return new Float32Array([this.wWidth, this.wLevel]); }
-    public getSampleInfo(): Float32Array { return new Float32Array([this.slabCentre, this.noSamples])} 
+    public getSampleInfo(): Float32Array { return new Float32Array([this.slabCentre, this.noSamples]); } 
+    public getLightDir(): Float32Array { return this.lightDir as Float32Array; }
 
     private volumeCentre(): vec3 { return vec3.fromValues(-this.volumeBounds[0] / 2, -this.volumeBounds[1] / 2, -this.volumeBounds[2] / 2); }
     private imageCentre(): vec3 { return vec3.fromValues(this.imageSize[0] / 2, this.imageSize[1] / 2, 0); }
@@ -105,6 +110,18 @@ export class Camera {
         vec3.transformMat4(this.viewSide, this.viewSide, mat4.fromRotation(mat4.create(), dx, this.viewUp));
         vec3.transformMat4(this.viewDirection, this.viewDirection, mat4.fromRotation(mat4.create(), dy, this.viewSide));
         vec3.transformMat4(this.viewUp, this.viewUp, mat4.fromRotation(mat4.create(), dy, this.viewSide));
+    }
+
+    public updateLighting(dlat: number, dlong: number): void {
+        console.log(dlat + " " + dlong);
+        console.log('Before: ' + this.lightDir);
+        let lat = (Math.atan2(this.lightDir[2], Math.sqrt(this.lightDir[0] ** 2 + this.lightDir[1] ** 2))) + dlat;
+        let long = (Math.atan2(this.lightDir[1], this.lightDir[0])) + dlong;
+
+        this.lightDir[0] = Math.cos(lat) * Math.cos(long);
+        this.lightDir[1] = Math.cos(lat) * Math.sin(long);
+        this.lightDir[2] = Math.sin(lat);
+        console.log('After: ' + this.lightDir);
     }
 
     public updateWWidth(dw: number): void { this.wWidth += dw; }

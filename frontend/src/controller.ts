@@ -3,6 +3,7 @@ import { Renderer } from "./renderer";
 export class Controller {
     private renderer: Renderer;
     private leftDown: boolean;
+    private updateLightSource: boolean;
     private rightDown: boolean;
     private initPos: [number, number];
 
@@ -19,10 +20,12 @@ export class Controller {
     private wWidthFactor: number = 0.0002;
     private wLevelFactor: number = 0.0001;
     private noSamplesFactor: number = 5;
+    private lightFactor: number = 100;
 
     constructor(renderer: Renderer) {
         this.renderer = renderer;
         this.leftDown = false;
+        this.updateLightSource = false;
         this.initPos = [0, 0];
         this.checkResize();
         this.initMouse();
@@ -39,7 +42,7 @@ export class Controller {
 
         // Mouse drag
         document.addEventListener('mousedown', (e: MouseEvent) => {
-            if (e.button == 0) this.leftDown = true; 
+            if (e.button == 0) this.leftDown = true;
             else if (e.button == 2) this.rightDown = true;
             this.initPos = [e.pageX, e.pageY];
         }, false);
@@ -50,7 +53,8 @@ export class Controller {
         document.addEventListener('mousemove', (e: MouseEvent) => {
             const dx = e.pageX - this.initPos[0];
             const dy = e.pageY - this.initPos[1];
-            if (this.leftDown) this.renderer.camera.updateRotation(-dx / this.rotationFactor, dy / this.rotationFactor);
+            if (this.updateLightSource && this.leftDown) this.renderer.camera.updateLighting(dx / this.lightFactor, dy / this.lightFactor);
+            else if (!this.updateLightSource && this.leftDown) this.renderer.camera.updateRotation(-dx / this.rotationFactor, dy / this.rotationFactor);
             else if (this.rightDown) this.renderer.camera.updatePan(dx, dy);
             this.initPos = [e.pageX, e.pageY];
         }, false);
@@ -71,6 +75,7 @@ export class Controller {
                 case 'ArrowRight': this.wLevelInc = true; break;
                 case '=': this.noSamplesInc = true; break;
                 case '-': this.noSamplesDec = true; break;
+                case 'Shift': this.updateLightSource = true; break;
             }
         }, false);
         document.addEventListener('keyup', (e : KeyboardEvent) => {
@@ -81,6 +86,7 @@ export class Controller {
                 case 'ArrowRight': this.wLevelInc = false; break;
                 case '+': case '=': this.noSamplesInc = false; break;
                 case '-': case '_': this.noSamplesDec = false; break;
+                case 'Shift': this.updateLightSource = false; break;
             }
         }, false);
     }
