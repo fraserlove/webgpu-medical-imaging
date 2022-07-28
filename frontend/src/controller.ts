@@ -20,7 +20,7 @@ export class Controller {
     private wWidthFactor: number = 0.0002;
     private wLevelFactor: number = 0.0001;
     private noSamplesFactor: number = 5;
-    private lightFactor: number = 100;
+    private lightFactor: number = 400;
 
     constructor(renderer: Renderer) {
         this.renderer = renderer;

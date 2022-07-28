@@ -115,7 +115,13 @@ export class Camera {
     public updateLighting(dlat: number, dlong: number): void {
         console.log(dlat + " " + dlong);
         console.log('Before: ' + this.lightDir);
-        let lat = (Math.atan2(this.lightDir[2], Math.sqrt(this.lightDir[0] ** 2 + this.lightDir[1] ** 2))) + dlat;
+        let newLat = (Math.atan2(this.lightDir[2], Math.sqrt(this.lightDir[0] ** 2 + this.lightDir[1] ** 2))) + dlat;
+        var lat;
+
+        if (newLat < 0) lat = 0;
+        else if (newLat > Math.PI) lat = Math.PI;
+        else lat = newLat;
+        
         let long = (Math.atan2(this.lightDir[1], this.lightDir[0])) + dlong;
 
         this.lightDir[0] = Math.cos(lat) * Math.cos(long);
