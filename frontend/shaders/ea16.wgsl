@@ -1,6 +1,7 @@
 struct Uniforms {
     transform: mat4x4<f32>,
     lightDir: vec3<f32>,
+    bbox: vec3<f32>,
     transferWidth: f32
 };
 
@@ -35,7 +36,7 @@ fn normal(pos: vec3<f32>, size: vec3<f32>) -> vec3<f32> {
     delta.x = intensity(textureSample(volumeTexture, volumeSampler, pos + vec3<f32>(1 / size.x, 0, 0))) - intensity(textureSample(volumeTexture, volumeSampler, pos - vec3<f32>(1 / size.x, 0, 0)));
     delta.y = intensity(textureSample(volumeTexture, volumeSampler, pos + vec3<f32>(0, 1 / size.y, 0))) - intensity(textureSample(volumeTexture, volumeSampler, pos - vec3<f32>(0, 1 / size.y, 0)));
     delta.z = intensity(textureSample(volumeTexture, volumeSampler, pos + vec3<f32>(0, 0, 1 / size.z))) - intensity(textureSample(volumeTexture, volumeSampler, pos - vec3<f32>(0, 0, 1 / size.z)));
-    return normalize(delta * vec3<f32>(1 / (2 * size.x), 1 / (2 * size.y), 1 / (2 * size.z)));
+    return normalize(delta * vec3<f32>(f32(size.x) - 1.0 / 2.0 * uniforms.bbox.x, f32(size.y) - 1.0 / 2.0 * uniforms.bbox.y, f32(size.z) - 1.0 / 2.0 * uniforms.bbox.z));
 }
 
 @fragment

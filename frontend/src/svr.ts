@@ -87,8 +87,8 @@ export class RendererSVR extends Renderer {
     }
 
     protected getComputeUniformData(): Float32Array {
-        let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + this.camera.getLightDir().length + 1);
-        computeUniformData.set([...this.camera.getViewMatrix(), ...this.camera.getLightDir(), this.transferFunction.getWidth()]);
+        let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + this.camera.getLightDir().length + this.context.getVolume().getBoundingBox().length + 1);
+        computeUniformData.set([...this.camera.getViewMatrix(), ...this.camera.getLightDir(), ...this.context.getVolume().getBoundingBox(), this.transferFunction.getWidth()]);
         return computeUniformData;
     }
 }

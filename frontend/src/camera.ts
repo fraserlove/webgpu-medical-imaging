@@ -33,7 +33,7 @@ export class Camera {
         this.noSamples = volume.getDepth();
         this.maxSamples = volume.getDepth();
 
-        this.lightDir = vec3.fromValues(-0.5, -0.5, 0.5);
+        this.lightDir = vec3.fromValues(0, 0, 1);
 
         this.setScale(0.4);
         this.setPanCine(0, 0, this.volumeBounds[2] / 2);
@@ -112,22 +112,14 @@ export class Camera {
         vec3.transformMat4(this.viewUp, this.viewUp, mat4.fromRotation(mat4.create(), dy, this.viewSide));
     }
 
-    public updateLighting(dlat: number, dlong: number): void {
-        console.log(dlat + " " + dlong);
-        console.log('Before: ' + this.lightDir);
-        let newLat = (Math.atan2(this.lightDir[2], Math.sqrt(this.lightDir[0] ** 2 + this.lightDir[1] ** 2))) + dlat;
-        var lat;
-
-        if (newLat < 0) lat = 0;
-        else if (newLat > Math.PI) lat = Math.PI;
-        else lat = newLat;
-        
-        let long = (Math.atan2(this.lightDir[1], this.lightDir[0])) + dlong;
+    public updateLighting(dlong: number, dlat: number): void {
+        let lat = (Math.asin(this.lightDir[2])) + dlat;
+        let long = ((Math.atan2(this.lightDir[1], this.lightDir[0]))) + dlong;
+        console.log(lat + " " + long);
 
         this.lightDir[0] = Math.cos(lat) * Math.cos(long);
         this.lightDir[1] = Math.cos(lat) * Math.sin(long);
         this.lightDir[2] = Math.sin(lat);
-        console.log('After: ' + this.lightDir);
     }
 
     public updateWWidth(dw: number): void { this.wWidth += dw; }
