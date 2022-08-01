@@ -57,19 +57,20 @@ fn frag_main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
         var val = intensity(textureSample(volumeTexture, volumeSampler, coords));
         var transferCoords = vec2<i32>(i32(val) % i32(uniforms.transferWidth), i32(val) / i32(uniforms.transferWidth));
         var colour: vec4<f32> = textureLoad(transferTexture, transferCoords, 0);
+
+        // Shading - Lambert
+        var toLight = normalize(uniforms.lightDir);
+        var shadingFactor = max(0, dot(toLight, normal(coords, size)));
+        colour.r *= shadingFactor;
+        colour.g *= shadingFactor;
+        colour.b *= shadingFactor;
+
+        // Composition
+        if (colour.a == 0) { continue; }
         accColour.r += (1 - accColour.a) * colour.a * colour.r;
         accColour.g += (1 - accColour.a) * colour.a * colour.g;
         accColour.b += (1 - accColour.a) * colour.a * colour.b;
         accColour.a += (1 - accColour.a) * colour.a;
-
-        // Shading
-        var toLight = normalize(uniforms.lightDir);
-        var lightColour = vec3<f32>(1, 1, 1);
-        var shadingFactor = max(0, dot(toLight, normal(coords, size)));
-        accColour.r *= shadingFactor;
-        accColour.g *= shadingFactor;
-        accColour.b *= shadingFactor;
-
         if (accColour.a >= 0.95) { break; }
     }
 
