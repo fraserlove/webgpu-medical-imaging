@@ -13,7 +13,6 @@ export class Context {
 
     constructor(volume: Volume, width: number, height: number) {
         this.volume = volume;
-
         this.canvas = document.createElement('canvas');
         document.body.appendChild(this.canvas);
         this.canvas.width = width;

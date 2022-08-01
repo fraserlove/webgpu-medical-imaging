@@ -1,10 +1,12 @@
 import { Context } from './context';
 import { Camera } from './camera';
 import { imagePlane } from './vertices';
+import { Controller } from './controller';
 
 export class Renderer {
     context: Context;
     camera: Camera;
+    controller: Controller;
 
     slabCentre: number;
     noSamples: number;
@@ -31,6 +33,7 @@ export class Renderer {
 
     constructor(context: Context) {
         this.context = context;
+        this.controller = new Controller(this);
         this.camera = new Camera(this.context.size(), this.context.getVolume());
     }
 
@@ -245,6 +248,7 @@ export class Renderer {
         this.executeComputePipeline();
         this.executeRenderPipeline();
         this.context.getQueue().submit([this.commandEncoder.finish()]);
+        this.controller.updateInputs();
     }
 
     public resize(width: number, height: number): void {
