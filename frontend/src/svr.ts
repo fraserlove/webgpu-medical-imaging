@@ -1,5 +1,4 @@
 import { Renderer } from './renderer';
-import { TransferFunction } from './transferFunction';
 import { Context } from './context';
 import ea16 from '../shaders/ea16.wgsl';
 import ea8 from '../shaders/ea8.wgsl';
@@ -7,20 +6,17 @@ import svr from '../shaders/svr.wgsl';
 
 export class RendererSVR extends Renderer {
 
-    private transferFunction: TransferFunction;
-
     private transferFunctionTexture: GPUTexture;
 
-    constructor(context: Context, transferFunction: TransferFunction) {
+    constructor(context: Context) {
         super(context);
-        this.transferFunction = transferFunction;
         this.renderShaderType = svr;
         if (this.context.getVolume().getBitsPerVoxel() == 8) this.computeShaderType = ea8;
         else if (this.context.getVolume().getBitsPerVoxel() == 16) this.computeShaderType = ea16;
     }
 
     public start(): void {
-        this.transferFunction.setWidth(this.context.getDevice().limits.maxTextureDimension1D);
+        this.context.getTransferFunction().setWidth(this.context.getDevice().limits.maxTextureDimension1D);
         super.start();
     }
 
@@ -57,19 +53,19 @@ export class RendererSVR extends Renderer {
         super.initResources();
 
         this.transferFunctionTexture = this.context.getDevice().createTexture({
-            size: this.transferFunction.size(),
-            format: this.transferFunction.getColourFormat(),
+            size: this.context.getTransferFunction().size(),
+            format: this.context.getTransferFunction().getColourFormat(),
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
             dimension: '2d'
         });
 
         const imageDataLayout = {
             offset: 0,
-            bytesPerRow: this.transferFunction.getBytesPerRow(),
-            rowsPerImage: this.transferFunction.getRowsPerImage()
+            bytesPerRow: this.context.getTransferFunction().getBytesPerRow(),
+            rowsPerImage: this.context.getTransferFunction().getRowsPerImage()
         };
 
-        this.context.getQueue().writeTexture({ texture: this.transferFunctionTexture }, this.transferFunction.getData(), imageDataLayout, this.transferFunction.size());
+        this.context.getQueue().writeTexture({ texture: this.transferFunctionTexture }, this.context.getTransferFunction().getData(), imageDataLayout, this.context.getTransferFunction().size());
     }
 
     protected initBindGroups(): void {
@@ -88,7 +84,7 @@ export class RendererSVR extends Renderer {
 
     protected getComputeUniformData(): Float32Array {
         let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + this.camera.getLightDir().length + this.context.getVolume().getBoundingBox().length + 1);
-        computeUniformData.set([...this.camera.getViewMatrix(), ...this.camera.getLightDir(), ...this.context.getVolume().getBoundingBox(), this.transferFunction.getWidth()]);
+        computeUniformData.set([...this.camera.getViewMatrix(), ...this.camera.getLightDir(), ...this.context.getVolume().getBoundingBox(), this.context.getTransferFunction().getWidth()]);
         return computeUniformData;
     }
 }

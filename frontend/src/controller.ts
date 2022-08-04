@@ -1,8 +1,9 @@
-import { Renderer } from "./renderer";
+import { Camera } from "./camera";
+import { Context } from "./context";
 
 export class Controller {
-    private renderer: Renderer;
-    private canvas: HTMLCanvasElement;
+    private context: Context;
+    private camera: Camera;
     private leftDown: boolean;
     private updateLightSource: boolean;
     private rightDown: boolean;
@@ -23,9 +24,9 @@ export class Controller {
     private noSamplesFactor: number = 5;
     private lightFactor: number = 400;
 
-    constructor(renderer: Renderer) {
-        this.renderer = renderer;
-        this.canvas = this.renderer.context.getWindow(this.renderer.renderID);
+    constructor(context: Context, camera: Camera) {
+        this.context = context;
+        this.camera = camera;
         this.leftDown = false;
         this.updateLightSource = false;
         this.initPos = [0, 0];
@@ -35,33 +36,33 @@ export class Controller {
 
     private initMouse(): void {
         // Mouse zoom
-        this.canvas.addEventListener('wheel', (e: WheelEvent) => {
+        this.context.getWindow().addEventListener('wheel', (e: WheelEvent) => {
             e.preventDefault(); // Disables backwards page-navigation on horizontal scroll
-            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) this.renderer.camera.updateScale(e.deltaY / this.scaleFactor);
-            else if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) this.renderer.camera.updateCine(e.deltaX / this.cineFactor);
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) this.camera.updateScale(e.deltaY / this.scaleFactor);
+            else if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) this.camera.updateCine(e.deltaX / this.cineFactor);
         }, { passive: false });
 
         // Mouse drag
-        this.canvas.addEventListener('mousedown', (e: MouseEvent) => {
+        this.context.getWindow().addEventListener('mousedown', (e: MouseEvent) => {
             if (e.button == 0) this.leftDown = true;
             else if (e.button == 2) this.rightDown = true;
             this.initPos = [e.pageX, e.pageY];
         }, false);
-        this.canvas.addEventListener('mouseup', (e: MouseEvent) => {
+        this.context.getWindow().addEventListener('mouseup', (e: MouseEvent) => {
             if (e.button == 0) this.leftDown = false; 
             else if (e.button == 2) this.rightDown = false;
         }, false);
-        this.canvas.addEventListener('mousemove', (e: MouseEvent) => {
+        this.context.getWindow().addEventListener('mousemove', (e: MouseEvent) => {
             const dx = e.pageX - this.initPos[0];
             const dy = e.pageY - this.initPos[1];
-            if (this.updateLightSource && this.leftDown) this.renderer.camera.updateLighting(dx / this.lightFactor, dy / this.lightFactor);
-            else if (!this.updateLightSource && this.leftDown) this.renderer.camera.updateRotation(-dx / this.rotationFactor, dy / this.rotationFactor);
-            else if (this.rightDown) this.renderer.camera.updatePan(dx, dy);
+            if (this.updateLightSource && this.leftDown) this.camera.updateLighting(dx / this.lightFactor, dy / this.lightFactor);
+            else if (!this.updateLightSource && this.leftDown) this.camera.updateRotation(-dx / this.rotationFactor, dy / this.rotationFactor);
+            else if (this.rightDown) this.camera.updatePan(dx, dy);
             this.initPos = [e.pageX, e.pageY];
         }, false);
 
         // Disable right-click menu
-        this.canvas.oncontextmenu = function (e) {
+        this.context.getWindow().oncontextmenu = function (e) {
             e.preventDefault();
         };
     }
@@ -93,11 +94,11 @@ export class Controller {
     }
 
     public updateInputs(): void {
-        if (this.wLevelInc) this.renderer.camera.updateWLevel(this.wLevelFactor);
-        if (this.wLevelDec) this.renderer.camera.updateWLevel(-this.wLevelFactor);
-        if (this.wWidthInc) this.renderer.camera.updateWWidth(this.wWidthFactor);
-        if (this.wWidthDec) this.renderer.camera.updateWWidth(-this.wWidthFactor);
-        if (this.noSamplesInc) this.renderer.camera.updateNoSamples(this.noSamplesFactor);
-        if (this.noSamplesDec) this.renderer.camera.updateNoSamples(-this.noSamplesFactor);
+        if (this.wLevelInc) this.camera.updateWLevel(this.wLevelFactor);
+        if (this.wLevelDec) this.camera.updateWLevel(-this.wLevelFactor);
+        if (this.wWidthInc) this.camera.updateWWidth(this.wWidthFactor);
+        if (this.wWidthDec) this.camera.updateWWidth(-this.wWidthFactor);
+        if (this.noSamplesInc) this.camera.updateNoSamples(this.noSamplesFactor);
+        if (this.noSamplesDec) this.camera.updateNoSamples(-this.noSamplesFactor);
     }
 }

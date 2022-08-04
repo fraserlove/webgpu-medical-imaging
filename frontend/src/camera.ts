@@ -24,8 +24,7 @@ export class Camera {
     private volumeDataScale: number;
     private maxSamples: number;
 
-    constructor(imageSize: number[], volume: Volume) {
-        this.imageSize = imageSize;
+    constructor(volume: Volume) {
         this.volumeBounds = volume.getBoundingBox();
         this.volumeDataScale = volume.volumeDataScale();
 
