@@ -29,7 +29,6 @@ export class Controller {
         this.leftDown = false;
         this.updateLightSource = false;
         this.initPos = [0, 0];
-        this.checkResize();
         this.initMouse();
         this.initKeyboard();
     }
@@ -91,15 +90,6 @@ export class Controller {
                 case 'Shift': this.updateLightSource = false; break;
             }
         }, false);
-    }
-
-    private checkResize(): void {
-        window.onresize = () => {
-            if (this.renderer.context.getDevice() != undefined) {
-                this.renderer.context.resize(window.innerWidth, window.innerHeight);
-                this.renderer.resize();
-            }
-        }
     }
 
     public updateInputs(): void {

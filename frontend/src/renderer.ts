@@ -35,13 +35,12 @@ export class Renderer {
 
     constructor(context: Context) {
         this.context = context;
-        this.renderID = this.context.addRenderer();
+        this.renderID = this.context.addRenderer(this);
         this.controller = new Controller(this);
+        this.camera = new Camera(this.context.windowSize(this.renderID), this.context.getVolume());
     }
 
     public start(): void {
-        // Camera must be initialised after all the renderers have been loaded so the window size is correct.
-        this.camera = new Camera(this.context.windowSize(this.renderID), this.context.getVolume());
         console.log('RENDERER: Creating Pipelines...');
         this.initPipelineLayouts();
         this.initPipelines();
@@ -49,6 +48,7 @@ export class Renderer {
         this.initBuffers();
         this.initResources();
         this.initBindGroups();
+        this.resize(); // Resize all windows correctly
         console.log('RENDERER: Rendering...');
     }
 

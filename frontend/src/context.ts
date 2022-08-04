@@ -1,7 +1,9 @@
 import { Volume } from './volume';
+import { Renderer } from './renderer';
 
 export class Context {
     private volume: Volume;
+    private renderers: Renderer[];
 
     private adapter: GPUAdapter;
     private device: GPUDevice;
@@ -20,6 +22,8 @@ export class Context {
         this.height = height;
         this.windows = [];
         this.contexts = [];
+        this.renderers = [];
+        this.checkResize();
     }
 
     public getVolume(): Volume { return this.volume; }
@@ -30,21 +34,31 @@ export class Context {
     public windowSize(idx: number): number[] { return [this.windows[idx].width, this.windows[idx].height]; }
     public displayFormat(): GPUTextureFormat { return this.canvasFormat; }
 
-    public addRenderer(): number {
+    public addRenderer(renderer: Renderer): number {
+        this.renderers.push(renderer);
         let window = document.createElement('canvas');
         document.body.appendChild(window);
-        window.height = this.height;
         this.windows.push(window);
-        for (let i = 0; i < this.windows.length; i++) { this.windows[i].width = this.width / this.windows.length; }
+        for (let i = 0; i < this.windows.length; i++) { 
+            this.windows[i].width = this.width / this.windows.length;
+            this.windows[i].height = this.height;
+        }
         return this.windows.length - 1;
+    }
+
+    private checkResize(): void {
+        window.onresize = () => {
+            if (this.getDevice() != undefined) { this.resize(window.innerWidth, window.innerHeight); }
+        }
     }
 
     public resize(width: number, height: number): void {
         this.width = width;
         this.height = height;
-        for (let i = 0; i < this.windows.length; i++) { 
+        for (let i = 0; i < this.renderers.length; i++) { 
             this.windows[i].width = this.width / this.windows.length; 
             this.windows[i].height = this.height;
+            this.renderers[i].resize();
         }
     }
 
