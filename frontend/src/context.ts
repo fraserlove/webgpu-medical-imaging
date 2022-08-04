@@ -7,29 +7,45 @@ export class Context {
     private device: GPUDevice;
     private queue: GPUQueue;
 
-    private canvas: HTMLCanvasElement;
-    private context: GPUCanvasContext;
+    private windows: HTMLCanvasElement[];
+    private contexts: GPUCanvasContext[];
     private canvasFormat: GPUTextureFormat;
+
+    private width: number;
+    private height: number;
 
     constructor(volume: Volume, width: number, height: number) {
         this.volume = volume;
-        this.canvas = document.createElement('canvas');
-        document.body.appendChild(this.canvas);
-        this.canvas.width = width;
-        this.canvas.height = height;
+        this.width = width;
+        this.height = height;
+        this.windows = [];
+        this.contexts = [];
     }
 
     public getVolume(): Volume { return this.volume; }
     public getDevice(): GPUDevice { return this.device; }
     public getQueue(): GPUQueue { return this.queue; }
-    public getCanvas(): HTMLCanvasElement { return this.canvas; }
-    public getCanvasContext(): GPUCanvasContext { return this.context; }
-    public size(): number[] { return [this.canvas.width, this.canvas.height]; }
+    public getWindow(idx: number): HTMLCanvasElement { return this.windows[idx]; }
+    public getWindowContext(idx: number): GPUCanvasContext { return this.contexts[idx]; }
+    public windowSize(idx: number): number[] { return [this.windows[idx].width, this.windows[idx].height]; }
     public displayFormat(): GPUTextureFormat { return this.canvasFormat; }
 
+    public addRenderer(): number {
+        let window = document.createElement('canvas');
+        document.body.appendChild(window);
+        window.height = this.height;
+        this.windows.push(window);
+        for (let i = 0; i < this.windows.length; i++) { this.windows[i].width = this.width / this.windows.length; }
+        return this.windows.length - 1;
+    }
+
     public resize(width: number, height: number): void {
-        this.canvas.width = width;
-        this.canvas.height = height;
+        this.width = width;
+        this.height = height;
+        for (let i = 0; i < this.windows.length; i++) { 
+            this.windows[i].width = this.width / this.windows.length; 
+            this.windows[i].height = this.height;
+        }
     }
 
     public async initWebGPU(): Promise<boolean> {
@@ -38,14 +54,17 @@ export class Context {
             this.adapter = await navigator.gpu.requestAdapter();
             this.device = await this.adapter.requestDevice();
             this.queue = this.device.queue;
+            this.canvasFormat = navigator.gpu.getPreferredCanvasFormat();
 
-            this.context = this.canvas.getContext('webgpu');
-            this.canvasFormat = navigator.gpu.getPreferredCanvasFormat(),
-            this.context.configure({
-                device: this.device,
-                format: this.canvasFormat,
-                alphaMode: 'premultiplied'
-            });
+            for (let i = 0; i < this.windows.length; i++) {
+                let context = this.windows[i].getContext('webgpu');
+                context.configure({
+                    device: this.device,
+                    format: this.canvasFormat,
+                    alphaMode: 'premultiplied'
+                });
+                this.contexts.push(context);
+            }
         }
         catch(error) {
             console.error(error);

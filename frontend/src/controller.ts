@@ -2,6 +2,7 @@ import { Renderer } from "./renderer";
 
 export class Controller {
     private renderer: Renderer;
+    private canvas: HTMLCanvasElement;
     private leftDown: boolean;
     private updateLightSource: boolean;
     private rightDown: boolean;
@@ -24,6 +25,7 @@ export class Controller {
 
     constructor(renderer: Renderer) {
         this.renderer = renderer;
+        this.canvas = this.renderer.context.getWindow(this.renderer.renderID);
         this.leftDown = false;
         this.updateLightSource = false;
         this.initPos = [0, 0];
@@ -34,23 +36,23 @@ export class Controller {
 
     private initMouse(): void {
         // Mouse zoom
-        document.addEventListener('wheel', (e: WheelEvent) => {
+        this.canvas.addEventListener('wheel', (e: WheelEvent) => {
             e.preventDefault(); // Disables backwards page-navigation on horizontal scroll
             if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) this.renderer.camera.updateScale(e.deltaY / this.scaleFactor);
             else if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) this.renderer.camera.updateCine(e.deltaX / this.cineFactor);
         }, { passive: false });
 
         // Mouse drag
-        document.addEventListener('mousedown', (e: MouseEvent) => {
+        this.canvas.addEventListener('mousedown', (e: MouseEvent) => {
             if (e.button == 0) this.leftDown = true;
             else if (e.button == 2) this.rightDown = true;
             this.initPos = [e.pageX, e.pageY];
         }, false);
-        document.addEventListener('mouseup', (e: MouseEvent) => {
+        this.canvas.addEventListener('mouseup', (e: MouseEvent) => {
             if (e.button == 0) this.leftDown = false; 
             else if (e.button == 2) this.rightDown = false;
         }, false);
-        document.addEventListener('mousemove', (e: MouseEvent) => {
+        this.canvas.addEventListener('mousemove', (e: MouseEvent) => {
             const dx = e.pageX - this.initPos[0];
             const dy = e.pageY - this.initPos[1];
             if (this.updateLightSource && this.leftDown) this.renderer.camera.updateLighting(dx / this.lightFactor, dy / this.lightFactor);
@@ -60,7 +62,7 @@ export class Controller {
         }, false);
 
         // Disable right-click menu
-        this.renderer.context.getCanvas().oncontextmenu = function (e) {
+        this.canvas.oncontextmenu = function (e) {
             e.preventDefault();
         };
     }
@@ -93,7 +95,10 @@ export class Controller {
 
     private checkResize(): void {
         window.onresize = () => {
-            if (this.renderer.context.getDevice() != undefined) this.renderer.resize(window.innerWidth, window.innerHeight);
+            if (this.renderer.context.getDevice() != undefined) {
+                this.renderer.context.resize(window.innerWidth, window.innerHeight);
+                this.renderer.resize();
+            }
         }
     }
 

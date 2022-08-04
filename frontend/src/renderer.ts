@@ -8,6 +8,8 @@ export class Renderer {
     camera: Camera;
     controller: Controller;
 
+    renderID: number;
+
     slabCentre: number;
     noSamples: number;
 
@@ -33,11 +35,13 @@ export class Renderer {
 
     constructor(context: Context) {
         this.context = context;
+        this.renderID = this.context.addRenderer();
         this.controller = new Controller(this);
-        this.camera = new Camera(this.context.size(), this.context.getVolume());
     }
 
     public start(): void {
+        // Camera must be initialised after all the renderers have been loaded so the window size is correct.
+        this.camera = new Camera(this.context.windowSize(this.renderID), this.context.getVolume());
         console.log('RENDERER: Creating Pipelines...');
         this.initPipelineLayouts();
         this.initPipelines();
@@ -170,7 +174,7 @@ export class Renderer {
         });
 
         this.computeTexture = this.context.getDevice().createTexture({
-            size: this.context.size(),
+            size: this.context.windowSize(this.renderID),
             format: 'rgba16float',
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
         });
@@ -223,7 +227,7 @@ export class Renderer {
     }
 
     private executeRenderPipeline(): void {
-        this.renderPassDescriptor.colorAttachments[0].view = this.context.getCanvasContext().getCurrentTexture().createView();
+        this.renderPassDescriptor.colorAttachments[0].view = this.context.getWindowContext(this.renderID).getCurrentTexture().createView();
         const passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
         passEncoder.setPipeline(this.renderPipeline);
         this.context.getQueue().writeBuffer(this.renderUniformBuffer, 0, this.getRenderUniformData());
@@ -251,12 +255,11 @@ export class Renderer {
         this.controller.updateInputs();
     }
 
-    public resize(width: number, height: number): void {
-        this.context.resize(width, height);
-        this.camera.resize(width, height);
+    public resize(): void {
+        this.camera.resize(this.context.windowSize(this.renderID));
         
         this.computeTexture = this.context.getDevice().createTexture({
-            size: this.context.size(),
+            size: this.context.windowSize(this.renderID),
             format: 'rgba16float',
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
         }); 

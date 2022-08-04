@@ -9,8 +9,8 @@ async function main(): Promise<void> {
     const volume = await new Volume();
     const transferFunction = await new TransferFunction();
     const context = new Context(volume, window.innerWidth,  window.innerHeight);
-    const renderers = [new RendererSVR(context, transferFunction)];
-    // const renderers = [new RendererMPR(context), new RendererSVR(context, transferFunction)];
+    //const renderers = [new RendererSVR(context, transferFunction)];
+    const renderers = [new RendererMPR(context), new RendererSVR(context, transferFunction)];
     // TODO: can only deal with one renderer at a time. Need a way to specify to add a renderer to the context and
     // update the canvas so they display side by side.
 

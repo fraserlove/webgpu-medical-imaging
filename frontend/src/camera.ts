@@ -126,6 +126,6 @@ export class Camera {
     public updateWLevel(dl: number): void { this.wLevel += dl; }
     public updateNoSamples(ds: number): void { if (this.noSamples + ds > 0 && this.noSamples + ds < this.maxSamples) this.noSamples += ds; }
     public updateSlabCentre(dz: number): void { this.slabCentre += dz; }
-    public resize(width: number, height: number): void { this.imageSize = [width, height]; }
+    public resize(size: number[]): void { this.imageSize = size; }
     public setNoSamples(s: number): void { this.noSamples = s; }
 }
