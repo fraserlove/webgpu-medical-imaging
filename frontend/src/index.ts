@@ -10,7 +10,7 @@ async function main(): Promise<void> {
     const context = new Context(volume, transferFunction);
     const manager = new RendererManager(context);
     manager.addMPR();
-    manager.addSVR();
+    manager.addMPR();
 
     await context.initWebGPU();
 

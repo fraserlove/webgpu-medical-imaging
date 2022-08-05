@@ -1,16 +1,19 @@
 import { Renderer } from './renderer';
 import { Context } from './context';
+import { SettingsSVR } from './settings';
 import ea16 from '../shaders/ea16.wgsl';
 import ea8 from '../shaders/ea8.wgsl';
 import svr from '../shaders/svr.wgsl';
 
 export class RendererSVR extends Renderer {
 
+    settings: SettingsSVR;
     private transferFunctionTexture: GPUTexture;
 
     constructor(renderID: number, context: Context) {
         super(renderID, context);
         this.renderShaderType = svr;
+        this.settings = new SettingsSVR(renderID, this.context);
         if (this.context.getVolume().getBitsPerVoxel() == 8) this.computeShaderType = ea8;
         else if (this.context.getVolume().getBitsPerVoxel() == 16) this.computeShaderType = ea16;
     }

@@ -1,27 +1,16 @@
 import { Camera } from "./camera";
-import { Context } from "./context";
 
 export class Controller {
-    private window: HTMLCanvasElement; // Maybe revert back to context and use this.context.getWindow()
+    private window: HTMLCanvasElement;
     private camera: Camera;
     private leftDown: boolean;
     private updateLightSource: boolean;
     private rightDown: boolean;
     private initPos: [number, number];
 
-    private wWidthInc: boolean;
-    private wWidthDec: boolean;
-    private wLevelInc: boolean;
-    private wLevelDec: boolean;
-    private noSamplesInc: boolean;
-    private noSamplesDec: boolean;
-
     private scaleFactor: number = 1000;
     private rotationFactor: number = 100;
     private cineFactor: number = 10;
-    private wWidthFactor: number = 0.0002;
-    private wLevelFactor: number = 0.0001;
-    private noSamplesFactor: number = 5;
     private lightFactor: number = 400;
 
     constructor(window: HTMLCanvasElement, camera: Camera) {
@@ -68,37 +57,15 @@ export class Controller {
     }
 
     private initKeyboard(): void {
-        // Arrow controls
         document.addEventListener('keydown', (e : KeyboardEvent) => {
             switch(e.key) {
-                case 'ArrowUp': this.wWidthInc = true; break;
-                case 'ArrowLeft': this.wLevelDec = true; break;
-                case 'ArrowDown': this.wWidthDec = true; break;
-                case 'ArrowRight': this.wLevelInc = true; break;
-                case '=': this.noSamplesInc = true; break;
-                case '-': this.noSamplesDec = true; break;
                 case 'Shift': this.updateLightSource = true; break;
             }
         }, false);
         document.addEventListener('keyup', (e : KeyboardEvent) => {
             switch(e.key) {
-                case 'ArrowUp': this.wWidthInc = false; break;
-                case 'ArrowLeft': this.wLevelDec = false; break;
-                case 'ArrowDown': this.wWidthDec = false; break;
-                case 'ArrowRight': this.wLevelInc = false; break;
-                case '+': case '=': this.noSamplesInc = false; break;
-                case '-': case '_': this.noSamplesDec = false; break;
                 case 'Shift': this.updateLightSource = false; break;
             }
         }, false);
-    }
-
-    public updateInputs(): void {
-        if (this.wLevelInc) this.camera.updateWLevel(this.wLevelFactor);
-        if (this.wLevelDec) this.camera.updateWLevel(-this.wLevelFactor);
-        if (this.wWidthInc) this.camera.updateWWidth(this.wWidthFactor);
-        if (this.wWidthDec) this.camera.updateWWidth(-this.wWidthFactor);
-        if (this.noSamplesInc) this.camera.updateNoSamples(this.noSamplesFactor);
-        if (this.noSamplesDec) this.camera.updateNoSamples(-this.noSamplesFactor);
     }
 }

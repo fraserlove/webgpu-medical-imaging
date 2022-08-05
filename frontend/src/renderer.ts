@@ -242,9 +242,7 @@ export class Renderer {
     }
 
     protected getComputeUniformData(): Float32Array {
-        let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + 2);
-        computeUniformData.set([...this.camera.getViewMatrix(), ...this.camera.getSampleInfo()]);
-        return computeUniformData;
+        return new Float32Array(1);
     }
 
     public render(): void {
@@ -252,7 +250,6 @@ export class Renderer {
         this.executeComputePipeline();
         this.executeRenderPipeline();
         this.context.getQueue().submit([this.commandEncoder.finish()]);
-        this.controller.updateInputs();
     }
 
     public resize(size): void {

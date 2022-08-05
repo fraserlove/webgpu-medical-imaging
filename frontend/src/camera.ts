@@ -12,25 +12,15 @@ export class Camera {
     private camera: mat4 = mat4.create();
     private view: mat4 = mat4.create();
 
-    private wWidth: number = 1000.0/65535.0;
-    private wLevel: number = 0.498;
-
     private lightDir: vec3;
 
     private imageSize: number[];
     private volumeBounds: number[];
-    private slabCentre: number;
-    private noSamples: number;
     private volumeDataScale: number;
-    private maxSamples: number;
 
     constructor(volume: Volume) {
         this.volumeBounds = volume.getBoundingBox();
         this.volumeDataScale = volume.volumeDataScale();
-
-        this.slabCentre = volume.getDepth() / 2;
-        this.noSamples = volume.getDepth();
-        this.maxSamples = volume.getDepth();
 
         this.lightDir = vec3.fromValues(0, 0, 1);
 
@@ -65,8 +55,6 @@ export class Camera {
 
     public getCameraMatrix(): Float32Array { this.CalculateViewMatrix(); return this.camera as Float32Array; }
     public getViewMatrix(): Float32Array { this.CalculateViewMatrix(); return this.view as Float32Array; }
-    public getWWidthLevel(): Float32Array { return new Float32Array([this.wWidth, this.wLevel]); }
-    public getSampleInfo(): Float32Array { return new Float32Array([this.slabCentre, this.noSamples]); } 
     public getLightDir(): Float32Array { return this.lightDir as Float32Array; }
 
     private volumeCentre(): vec3 { return vec3.fromValues(-this.volumeBounds[0] / 2, -this.volumeBounds[1] / 2, -this.volumeBounds[2] / 2); }
@@ -121,10 +109,5 @@ export class Camera {
         this.lightDir[2] = Math.sin(lat);
     }
 
-    public updateWWidth(dw: number): void { this.wWidth += dw; }
-    public updateWLevel(dl: number): void { this.wLevel += dl; }
-    public updateNoSamples(ds: number): void { if (this.noSamples + ds > 0 && this.noSamples + ds < this.maxSamples) this.noSamples += ds; }
-    public updateSlabCentre(dz: number): void { this.slabCentre += dz; }
     public resize(size: number[]): void { this.imageSize = size; }
-    public setNoSamples(s: number): void { this.noSamples = s; }
 }

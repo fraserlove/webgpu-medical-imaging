@@ -10,7 +10,7 @@ export class Context {
     private queue: GPUQueue;
 
     private windows: HTMLCanvasElement[];
-    private contexts: GPUCanvasContext[]; // Remove use of multiple contexts and instead only use 1, have multiple windows instead all controlled from this context class. Similar to commit before previous commit
+    private contexts: GPUCanvasContext[];
 
     constructor(volume: Volume, transferFunction: TransferFunction) {
         this.volume = volume;
