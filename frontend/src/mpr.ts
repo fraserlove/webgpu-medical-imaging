@@ -6,8 +6,8 @@ import mpr from '../shaders/mpr.wgsl';
 
 export class RendererMPR extends Renderer {
 
-    constructor(context: Context) {
-        super(context);
+    constructor(renderID: number, context: Context) {
+        super(renderID, context);
         this.renderShaderType = mpr;
         if (this.context.getVolume().getBitsPerVoxel() == 8) this.computeShaderType = mip8;
         else if (this.context.getVolume().getBitsPerVoxel() == 16) this.computeShaderType = mip16;

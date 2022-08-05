@@ -8,6 +8,7 @@ export class Renderer {
     camera: Camera;
     controller: Controller;
 
+    renderID: number;
     size: number[];
 
     slabCentre: number;
@@ -33,10 +34,11 @@ export class Renderer {
     commandEncoder: GPUCommandEncoder;
     renderPassDescriptor: GPURenderPassDescriptor;
 
-    constructor(context: Context) {
+    constructor(renderID: number, context: Context) {
+        this.renderID = renderID;
         this.context = context;
         this.camera = new Camera(this.context.getVolume());
-        this.controller = new Controller(this.context, this.camera);
+        this.controller = new Controller(this.context.newWindow(), this.camera);
     }
 
     public start(): void {
@@ -225,7 +227,7 @@ export class Renderer {
     }
 
     private executeRenderPipeline(): void {
-        this.renderPassDescriptor.colorAttachments[0].view = this.context.getGPUContext().getCurrentTexture().createView();
+        this.renderPassDescriptor.colorAttachments[0].view = this.context.getGPUContext(this.renderID).getCurrentTexture().createView();
         const passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
         passEncoder.setPipeline(this.renderPipeline);
         this.context.getQueue().writeBuffer(this.renderUniformBuffer, 0, this.getRenderUniformData());
@@ -256,7 +258,8 @@ export class Renderer {
     public resize(size): void {
         this.size = size;
         this.camera.resize(size);
-        this.context.resize(size);
+        this.context.resizeWindow(this.renderID, size);
+
         if (this.renderUniformBuffer != undefined) { // Needed so doesnt run when first setting up renderers
             this.computeTexture = this.context.getDevice().createTexture({
                 size: size,

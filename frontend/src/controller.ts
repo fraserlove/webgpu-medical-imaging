@@ -2,7 +2,7 @@ import { Camera } from "./camera";
 import { Context } from "./context";
 
 export class Controller {
-    private context: Context;
+    private window: HTMLCanvasElement; // Maybe revert back to context and use this.context.getWindow()
     private camera: Camera;
     private leftDown: boolean;
     private updateLightSource: boolean;
@@ -24,8 +24,8 @@ export class Controller {
     private noSamplesFactor: number = 5;
     private lightFactor: number = 400;
 
-    constructor(context: Context, camera: Camera) {
-        this.context = context;
+    constructor(window: HTMLCanvasElement, camera: Camera) {
+        this.window = window;
         this.camera = camera;
         this.leftDown = false;
         this.updateLightSource = false;
@@ -36,23 +36,23 @@ export class Controller {
 
     private initMouse(): void {
         // Mouse zoom
-        this.context.getWindow().addEventListener('wheel', (e: WheelEvent) => {
+        this.window.addEventListener('wheel', (e: WheelEvent) => {
             e.preventDefault(); // Disables backwards page-navigation on horizontal scroll
             if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) this.camera.updateScale(e.deltaY / this.scaleFactor);
             else if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) this.camera.updateCine(e.deltaX / this.cineFactor);
         }, { passive: false });
 
         // Mouse drag
-        this.context.getWindow().addEventListener('mousedown', (e: MouseEvent) => {
+        this.window.addEventListener('mousedown', (e: MouseEvent) => {
             if (e.button == 0) this.leftDown = true;
             else if (e.button == 2) this.rightDown = true;
             this.initPos = [e.pageX, e.pageY];
         }, false);
-        this.context.getWindow().addEventListener('mouseup', (e: MouseEvent) => {
+        this.window.addEventListener('mouseup', (e: MouseEvent) => {
             if (e.button == 0) this.leftDown = false; 
             else if (e.button == 2) this.rightDown = false;
         }, false);
-        this.context.getWindow().addEventListener('mousemove', (e: MouseEvent) => {
+        this.window.addEventListener('mousemove', (e: MouseEvent) => {
             const dx = e.pageX - this.initPos[0];
             const dy = e.pageY - this.initPos[1];
             if (this.updateLightSource && this.leftDown) this.camera.updateLighting(dx / this.lightFactor, dy / this.lightFactor);
@@ -62,7 +62,7 @@ export class Controller {
         }, false);
 
         // Disable right-click menu
-        this.context.getWindow().oncontextmenu = function (e) {
+        this.window.oncontextmenu = function (e) {
             e.preventDefault();
         };
     }

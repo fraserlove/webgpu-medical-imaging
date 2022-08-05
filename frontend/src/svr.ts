@@ -8,8 +8,8 @@ export class RendererSVR extends Renderer {
 
     private transferFunctionTexture: GPUTexture;
 
-    constructor(context: Context) {
-        super(context);
+    constructor(renderID: number, context: Context) {
+        super(renderID, context);
         this.renderShaderType = svr;
         if (this.context.getVolume().getBitsPerVoxel() == 8) this.computeShaderType = ea8;
         else if (this.context.getVolume().getBitsPerVoxel() == 16) this.computeShaderType = ea16;

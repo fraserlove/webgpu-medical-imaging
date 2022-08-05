@@ -9,29 +9,36 @@ export class Context {
     private device: GPUDevice;
     private queue: GPUQueue;
 
-    private window: HTMLCanvasElement;
-    private context: GPUCanvasContext;
+    private windows: HTMLCanvasElement[];
+    private contexts: GPUCanvasContext[]; // Remove use of multiple contexts and instead only use 1, have multiple windows instead all controlled from this context class. Similar to commit before previous commit
 
     constructor(volume: Volume, transferFunction: TransferFunction) {
         this.volume = volume;
         this.transferFunction = transferFunction;
-        this.window = document.createElement('canvas');
-        document.body.appendChild(this.window);
+        this.windows = [];
+        this.contexts = [];
     }
 
     public getVolume(): Volume { return this.volume; }
     public getTransferFunction(): TransferFunction { return this.transferFunction; }
     public getDevice(): GPUDevice { return this.device; }
     public getQueue(): GPUQueue { return this.queue; }
-    public getWindow(): HTMLCanvasElement { return this.window; }
-    public getGPUContext(): GPUCanvasContext { return this.context; }
+    public getWindow(idx: number): HTMLCanvasElement { return this.windows[idx]; }
+    public getGPUContext(idx: number): GPUCanvasContext { return this.contexts[idx]; }
     public displayFormat(): GPUTextureFormat { return navigator.gpu.getPreferredCanvasFormat(); }
 
-    public resize(size: number[]): void { 
-        this.window.width = size[0];
-        this.window.height = size[1];
+    public newWindow(): HTMLCanvasElement {
+        let window = document.createElement('canvas');
+        this.windows.push(window);
+        document.body.appendChild(window);
+        return window;
     }
-    
+
+    public resizeWindow(idx: number, size: number[]): void { 
+        this.windows[idx].width = size[0];
+        this.windows[idx].height = size[1];
+    }
+
     public async initWebGPU(): Promise<boolean> {
         console.log('CONTEXT: Initialising WebGPU...');
         try {
@@ -39,12 +46,15 @@ export class Context {
             this.device = await this.adapter.requestDevice();
             this.queue = this.device.queue;
 
-            this.context = this.window.getContext('webgpu');
-            this.context.configure({
-                device: this.device,
-                format: this.displayFormat(),
-                alphaMode: 'premultiplied'
-            });
+            for (let i = 0; i < this.windows.length; i++) { 
+                let context = this.windows[i].getContext('webgpu');
+                context.configure({
+                    device: this.device,
+                    format: this.displayFormat(),
+                    alphaMode: 'premultiplied'
+                });
+                this.contexts.push(context);
+             }
         }
         catch(error) {
             console.error(error);

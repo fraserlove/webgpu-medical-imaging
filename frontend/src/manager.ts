@@ -1,18 +1,19 @@
+import { Context } from "./context";
+import { RendererMPR } from "./mpr";
 import { Renderer } from "./renderer";
+import { RendererSVR } from "./svr";
 
 export class RendererManager {
     private renderers: Renderer[];
+    private context: Context;
 
-    private width: number;
-    private height: number;
-
-    constructor(renderers: Renderer[]) {
-        this.renderers = renderers;
+    constructor(context) {
+        this.context = context;
+        this.renderers = [];
 
         window.onresize = () => {
             if (this.renderers[0].context.getDevice() != undefined) { this.resize(window.innerWidth, window.innerHeight); }
         }
-        this.resize(window.innerWidth, window.innerHeight);
     }
 
     public async start() {
@@ -23,17 +24,25 @@ export class RendererManager {
         for (let i = 0; i < this.renderers.length; i++) { this.renderers[i].render(); }
     }
 
-    public addRenderer(renderer: Renderer) {
+    public addMPR() {
+        let renderer = new RendererMPR(this.renderers.length, this.context);
+        this.addRenderer(renderer);
+    }
+
+    public addSVR() {
+        let renderer = new RendererSVR(this.renderers.length, this.context);
+        this.addRenderer(renderer);
+    }
+
+    private addRenderer(renderer: Renderer) {
         this.renderers.push(renderer);
         this.resize(window.innerWidth, window.innerHeight);
     }
 
     public resize(width: number, height: number) {
-        this.width = width;
-        this.height = height;
         for (let i = 0; i < this.renderers.length; i++) {
-            console.log(i + ' ' + this.width / this.renderers.length + ' ' + this.height);
-            this.renderers[i].resize([this.width / this.renderers.length, this.height]);
+            console.log(i + ' ' + width / this.renderers.length + ' ' + height);
+            this.renderers[i].resize([width / this.renderers.length, height]);
         }
     }
 }
