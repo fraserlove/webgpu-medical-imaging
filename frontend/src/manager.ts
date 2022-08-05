@@ -12,7 +12,7 @@ export class RendererManager {
         this.renderers = [];
 
         window.onresize = () => {
-            if (this.renderers[0].context.getDevice() != undefined) { this.resize(window.innerWidth, window.innerHeight); }
+            if (this.context.getDevice() != undefined) { this.resize(window.innerWidth, window.innerHeight); }
         }
     }
 
@@ -41,7 +41,6 @@ export class RendererManager {
 
     public resize(width: number, height: number) {
         for (let i = 0; i < this.renderers.length; i++) {
-            console.log(i + ' ' + width / this.renderers.length + ' ' + height);
             this.renderers[i].resize([width / this.renderers.length, height]);
         }
     }

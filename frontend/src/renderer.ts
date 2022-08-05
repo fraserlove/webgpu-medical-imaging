@@ -4,35 +4,32 @@ import { imagePlane } from './vertices';
 import { Controller } from './controller';
 
 export class Renderer {
-    context: Context;
-    camera: Camera;
-    controller: Controller;
+    protected context: Context;
+    protected camera: Camera;
+    protected controller: Controller;
 
-    renderID: number;
-    size: number[];
+    private renderID: number;
+    private size: number[];
 
-    slabCentre: number;
-    noSamples: number;
+    protected computeShaderType: any;
+    protected renderShaderType: any;
 
-    computeShaderType: any;
-    renderShaderType: any;
+    protected renderUniformBuffer: GPUBuffer;
+    protected computeUniformBuffer: GPUBuffer;
+    private vertexBuffer: GPUBuffer;
+    private computeTexture: GPUTexture;
+    protected volumeTexture: GPUTexture;
+    protected sampler: GPUSampler;
 
-    renderUniformBuffer: GPUBuffer;
-    computeUniformBuffer: GPUBuffer;
-    vertexBuffer: GPUBuffer;
-    computeTexture: GPUTexture;
-    volumeTexture: GPUTexture;
-    sampler: GPUSampler;
+    protected renderBindGroupLayout: GPUBindGroupLayout;
+    protected computeBindGroupLayout: GPUBindGroupLayout;
+    protected renderBindGroup: GPUBindGroup;
+    protected computeBindGroup: GPUBindGroup;
+    private renderPipeline: GPURenderPipeline;
+    private computePipeline: GPURenderPipeline;
 
-    renderBindGroupLayout: GPUBindGroupLayout;
-    computeBindGroupLayout: GPUBindGroupLayout;
-    renderBindGroup: GPUBindGroup;
-    computeBindGroup: GPUBindGroup;
-    renderPipeline: GPURenderPipeline;
-    computePipeline: GPURenderPipeline;
-
-    commandEncoder: GPUCommandEncoder;
-    renderPassDescriptor: GPURenderPassDescriptor;
+    private commandEncoder: GPUCommandEncoder;
+    private renderPassDescriptor: GPURenderPassDescriptor;
 
     constructor(renderID: number, context: Context) {
         this.renderID = renderID;
