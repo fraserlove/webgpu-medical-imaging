@@ -2,13 +2,14 @@ import { Context } from './context';
 import { Camera } from './camera';
 import { imagePlane } from './vertices';
 import { Controller } from './controller';
+import { RendererManager } from './manager';
 
 export class Renderer {
     protected context: Context;
     protected camera: Camera;
     protected controller: Controller;
 
-    private renderID: number;
+    protected renderID: number;
     private size: number[];
 
     protected computeShaderType: any;
@@ -31,9 +32,9 @@ export class Renderer {
     private commandEncoder: GPUCommandEncoder;
     private renderPassDescriptor: GPURenderPassDescriptor;
 
-    constructor(renderID: number, context: Context) {
-        this.renderID = renderID;
-        this.context = context;
+    constructor(manager: RendererManager) {
+        this.renderID = manager.highestIndex();
+        this.context = manager.getContext();
         this.camera = new Camera(this.context.getVolume());
         this.controller = new Controller(this.context.newWindow(), this.camera);
     }

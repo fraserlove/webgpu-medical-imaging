@@ -47,6 +47,15 @@ export class Context {
         return window;
     }
 
+    public removeWindow(idx: number): void {
+        this.containers[idx].remove();
+        this.contexts[idx].unconfigure();
+
+        this.containers.splice(idx);
+        this.windows.splice(idx);
+        this.contexts.splice(idx);
+    }
+
     public resizeWindow(idx: number, size: number[]): void { 
         this.windows[idx].width = size[0];
         this.windows[idx].height = size[1];

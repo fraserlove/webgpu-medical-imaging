@@ -1,18 +1,18 @@
 import { Renderer } from './renderer';
-import { Context } from './context';
 import { SettingsMPR } from './settings';
 import mip16 from '../shaders/mip16.wgsl';
 import mip8 from '../shaders/mip8.wgsl';
 import mpr from '../shaders/mpr.wgsl';
+import { RendererManager } from './manager';
 
 export class RendererMPR extends Renderer {
 
     private settings: SettingsMPR;
 
-    constructor(renderID: number, context: Context) {
-        super(renderID, context);
+    constructor(manager: RendererManager) {
+        super(manager);
         this.renderShaderType = mpr;
-        this.settings = new SettingsMPR(renderID, this.context);
+        this.settings = new SettingsMPR(manager);
         if (this.context.getVolume().getBitsPerVoxel() == 8) this.computeShaderType = mip8;
         else if (this.context.getVolume().getBitsPerVoxel() == 16) this.computeShaderType = mip16;
     }

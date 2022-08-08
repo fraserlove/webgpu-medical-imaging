@@ -1,5 +1,4 @@
 import { GUI } from 'dat.gui';
-import { Context } from './context';
 import { RendererManager } from './manager';
 
 export class GlobalSettings {
@@ -10,18 +9,25 @@ export class GlobalSettings {
         this.gui.domElement.id = 'gui-global';
         document.body.appendChild(this.gui.domElement);
 
-        this.gui.add(manager, 'addMPR');
-        this.gui.add(manager, 'addSVR');
+        const folder = this.gui.addFolder('Global Settings');
+        folder.add(manager, 'addMPR');
+        folder.add(manager, 'addSVR');
     }
 }
 
 export class RendererSettings {
     protected gui: GUI;
+    protected folder: any;
+    protected renderID: number;
 
-    constructor(renderID: number, context: Context) {
+    constructor(manager: RendererManager) {
+        this.renderID = manager.highestIndex();
         this.gui = new GUI({ autoPlace: false });
         this.gui.domElement.id = 'gui';
-        context.getContainer(renderID).appendChild(this.gui.domElement);
+        manager.getContext().getContainer(this.renderID).appendChild(this.gui.domElement);
+
+        this.folder = this.gui.addFolder('Render Settings');
+        this.folder.open();
     }
 }
 
@@ -33,19 +39,18 @@ export class SettingsMPR extends RendererSettings {
     private slabCentre: number;
     private noSamples: number;
 
-    constructor(renderID: number, context: Context) {
-        super(renderID, context);
+    constructor(manager: RendererManager) {
+        super(manager);
 
-        let maxDepth = context.getVolume().getDepth();
+        let maxDepth = manager.getContext().getVolume().getDepth();
         this.slabCentre = maxDepth / 2;
         this.noSamples = maxDepth;
 
-        const folder = this.gui.addFolder('MPR Settings');
-        folder.add(this, 'noSamples', 0, maxDepth);
-        folder.add(this, 'slabCentre', 0, maxDepth);
-        folder.add(this, 'wWidth', 0, 0.05);
-        folder.add(this, 'wLevel', 0.48, 0.52, 0.0001);
-        folder.open();
+        this.folder.add(this, 'noSamples', 0, maxDepth);
+        this.folder.add(this, 'slabCentre', 0, maxDepth);
+        this.folder.add(this, 'wWidth', 0, 0.05);
+        this.folder.add(this, 'wLevel', 0.48, 0.52, 0.0001);
+        this.folder.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer');
     }
 
     public getWWidthLevel(): Float32Array { return new Float32Array([this.wWidth, this.wLevel]); }
@@ -54,10 +59,8 @@ export class SettingsMPR extends RendererSettings {
 
 export class SettingsSVR extends RendererSettings {
 
-    constructor(renderID: number, context: Context) {
-        super(renderID, context);
-
-        const folder = this.gui.addFolder('SVR Settings');
-        folder.open();
+    constructor(manager: RendererManager) {
+        super(manager);
+        this.folder.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer');
     }
 }
