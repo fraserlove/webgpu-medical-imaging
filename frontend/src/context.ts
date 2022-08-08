@@ -31,11 +31,11 @@ export class Context {
     public displayFormat(): GPUTextureFormat { return navigator.gpu.getPreferredCanvasFormat(); }
 
     public newWindow(): HTMLCanvasElement {
+        let container = document.createElement('div');
+        container.id = 'container';
+        this.containers.push(container);
         let window = document.createElement('canvas');
         this.windows.push(window);
-        let container = document.createElement('div');
-        this.containers.push(container);
-        container.id = 'container';
         container.appendChild(window);
         document.body.appendChild(container);
         return window;
