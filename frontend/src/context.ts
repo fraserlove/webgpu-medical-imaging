@@ -9,12 +9,14 @@ export class Context {
     private device: GPUDevice;
     private queue: GPUQueue;
 
+    private containers: HTMLDivElement[];
     private windows: HTMLCanvasElement[];
     private contexts: GPUCanvasContext[];
 
     constructor(volume: Volume, transferFunction: TransferFunction) {
         this.volume = volume;
         this.transferFunction = transferFunction;
+        this.containers = [];
         this.windows = [];
         this.contexts = [];
     }
@@ -23,6 +25,7 @@ export class Context {
     public getTransferFunction(): TransferFunction { return this.transferFunction; }
     public getDevice(): GPUDevice { return this.device; }
     public getQueue(): GPUQueue { return this.queue; }
+    public getContainer(idx: number): HTMLDivElement { return this.containers[idx]; }
     public getWindow(idx: number): HTMLCanvasElement { return this.windows[idx]; }
     public getGPUContext(idx: number): GPUCanvasContext { return this.contexts[idx]; }
     public displayFormat(): GPUTextureFormat { return navigator.gpu.getPreferredCanvasFormat(); }
@@ -30,7 +33,11 @@ export class Context {
     public newWindow(): HTMLCanvasElement {
         let window = document.createElement('canvas');
         this.windows.push(window);
-        document.body.appendChild(window);
+        let container = document.createElement('div');
+        this.containers.push(container);
+        container.id = 'container';
+        container.appendChild(window);
+        document.body.appendChild(container);
         return window;
     }
 

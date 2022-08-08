@@ -1,4 +1,4 @@
-import { GUI } from 'dat.gui'
+import { GUI } from 'dat.gui';
 import { Context } from './context';
 
 export class Settings {
@@ -7,7 +7,15 @@ export class Settings {
 
     constructor(renderID: number, context: Context) {
         this.context = context;
-        this.gui = new GUI();
+
+        //let container = document.createElement('div');
+        //container.id = 'gui_container';
+        //document.body.appendChild(container);
+
+        //this.gui = new GUI();
+        this.gui = new GUI({ autoPlace: false });
+        this.gui.domElement.id = 'gui';
+        this.context.getContainer(renderID).appendChild(this.gui.domElement);
     }
 }
 
