@@ -2,22 +2,22 @@ import { Context } from "./context";
 import { RendererMPR } from "./mpr";
 import { Renderer } from "./renderer";
 import { RendererSVR } from "./svr";
+import { GlobalSettings } from "./settings";
 
 export class RendererManager {
+
     private renderers: Renderer[];
     private context: Context;
+    private settings: GlobalSettings;
 
     constructor(context) {
         this.context = context;
         this.renderers = [];
+        this.settings = new GlobalSettings(this);
 
         window.onresize = () => {
             if (this.context.getDevice() != undefined) { this.resize(window.innerWidth, window.innerHeight); }
         }
-    }
-
-    public async start() {
-        for (let i = 0; i < this.renderers.length; i++) { await this.renderers[i].start(); }
     }
 
     public render() {
@@ -34,9 +34,10 @@ export class RendererManager {
         this.addRenderer(renderer);
     }
 
-    private addRenderer(renderer: Renderer) {
+    private async addRenderer(renderer: Renderer) {
         this.renderers.push(renderer);
         this.resize(window.innerWidth, window.innerHeight);
+        await renderer.start();
     }
 
     public resize(width: number, height: number) {

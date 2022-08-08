@@ -1,19 +1,31 @@
 import { GUI } from 'dat.gui';
 import { Context } from './context';
+import { RendererManager } from './manager';
 
-export class Settings {
+export class GlobalSettings {
     protected gui: GUI;
-    protected context: Context;
 
-    constructor(renderID: number, context: Context) {
-        this.context = context;
+    constructor(manager: RendererManager) {
         this.gui = new GUI({ autoPlace: false });
-        this.gui.domElement.id = 'gui';
-        this.context.getContainer(renderID).appendChild(this.gui.domElement);
+        this.gui.domElement.id = 'gui-global';
+        document.body.appendChild(this.gui.domElement);
+
+        this.gui.add(manager, 'addMPR');
+        this.gui.add(manager, 'addSVR');
     }
 }
 
-export class SettingsMPR extends Settings {
+export class RendererSettings {
+    protected gui: GUI;
+
+    constructor(renderID: number, context: Context) {
+        this.gui = new GUI({ autoPlace: false });
+        this.gui.domElement.id = 'gui';
+        context.getContainer(renderID).appendChild(this.gui.domElement);
+    }
+}
+
+export class SettingsMPR extends RendererSettings {
 
     private wWidth: number = 1000.0/65535.0;
     private wLevel: number = 0.498;
@@ -24,7 +36,7 @@ export class SettingsMPR extends Settings {
     constructor(renderID: number, context: Context) {
         super(renderID, context);
 
-        let maxDepth = this.context.getVolume().getDepth();
+        let maxDepth = context.getVolume().getDepth();
         this.slabCentre = maxDepth / 2;
         this.noSamples = maxDepth;
 
@@ -40,7 +52,7 @@ export class SettingsMPR extends Settings {
     public getSampleInfo(): Float32Array { return new Float32Array([this.slabCentre, this.noSamples]); } 
 }
 
-export class SettingsSVR extends Settings {
+export class SettingsSVR extends RendererSettings {
 
     constructor(renderID: number, context: Context) {
         super(renderID, context);

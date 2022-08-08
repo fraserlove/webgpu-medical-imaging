@@ -7,7 +7,7 @@ import mpr from '../shaders/mpr.wgsl';
 
 export class RendererMPR extends Renderer {
 
-    settings: SettingsMPR;
+    private settings: SettingsMPR;
 
     constructor(renderID: number, context: Context) {
         super(renderID, context);

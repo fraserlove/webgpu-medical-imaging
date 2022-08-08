@@ -7,7 +7,7 @@ import svr from '../shaders/svr.wgsl';
 
 export class RendererSVR extends Renderer {
 
-    settings: SettingsSVR;
+    private settings: SettingsSVR;
     private transferFunctionTexture: GPUTexture;
 
     constructor(renderID: number, context: Context) {

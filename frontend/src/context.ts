@@ -34,8 +34,14 @@ export class Context {
         let container = document.createElement('div');
         container.id = 'container';
         this.containers.push(container);
+
         let window = document.createElement('canvas');
         this.windows.push(window);
+
+        let context = this.windows[this.windows.length - 1].getContext('webgpu');
+        context.configure({ device: this.device, format: this.displayFormat(), alphaMode: 'premultiplied' });
+        this.contexts.push(context);
+            
         container.appendChild(window);
         document.body.appendChild(container);
         return window;
@@ -52,16 +58,6 @@ export class Context {
             this.adapter = await navigator.gpu.requestAdapter();
             this.device = await this.adapter.requestDevice();
             this.queue = this.device.queue;
-
-            for (let i = 0; i < this.windows.length; i++) { 
-                let context = this.windows[i].getContext('webgpu');
-                context.configure({
-                    device: this.device,
-                    format: this.displayFormat(),
-                    alphaMode: 'premultiplied'
-                });
-                this.contexts.push(context);
-             }
         }
         catch(error) {
             console.error(error);

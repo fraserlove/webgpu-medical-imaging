@@ -9,12 +9,8 @@ async function main(): Promise<void> {
     const transferFunction = await new TransferFunction();
     const context = new Context(volume, transferFunction);
     const manager = new RendererManager(context);
-    manager.addMPR();
-    manager.addMPR();
 
     await context.initWebGPU();
-
-    await manager.start();
     
     const run = () => {
         manager.render();
