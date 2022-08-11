@@ -26,7 +26,7 @@ export class Camera {
 
         this.setScale(0.4);
         this.setPanCine(0, 0, this.volumeBounds[2] / 2);
-        this.setViewDirection(vec3.fromValues(1, 0, 0), vec3.fromValues(0, -1, 0));
+        this.setViewDirection(vec3.fromValues(0, 1, 0), vec3.fromValues(0, 0, 1));
     }
 
     private CalculateViewMatrix(): void {
@@ -107,6 +107,8 @@ export class Camera {
         this.lightDir[0] = Math.cos(lat) * Math.cos(long);
         this.lightDir[1] = Math.cos(lat) * Math.sin(long);
         this.lightDir[2] = Math.sin(lat);
+        vec3.normalize(this.lightDir, this.lightDir);
+        console.log(this.lightDir[0] + " " + this.lightDir[1] + " " + this.lightDir[2]);
     }
 
     public resize(size: number[]): void { this.imageSize = size; }

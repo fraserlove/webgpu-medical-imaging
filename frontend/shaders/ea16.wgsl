@@ -31,7 +31,8 @@ fn intensity(sample: vec4<f32>) -> f32 {
     return sample.x * 256 + sample.y * 65280; // 0 to 2^16
 }
 
-fn normal(pos: vec3<f32>, size: vec3<f32>) -> vec3<f32> {
+fn normal(pos: vec3<f32>) -> vec3<f32> {
+    var size = vec3<f32>(textureDimensions(volumeTexture));
     var delta = vec3<f32>(0, 0, 0);
     delta.x = intensity(textureSample(volumeTexture, volumeSampler, pos + vec3<f32>(1 / size.x, 0, 0))) - intensity(textureSample(volumeTexture, volumeSampler, pos - vec3<f32>(1 / size.x, 0, 0)));
     delta.y = intensity(textureSample(volumeTexture, volumeSampler, pos + vec3<f32>(0, 1 / size.y, 0))) - intensity(textureSample(volumeTexture, volumeSampler, pos - vec3<f32>(0, 1 / size.y, 0)));
@@ -60,7 +61,7 @@ fn frag_main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
 
         // Shading - Lambert
         var toLight = normalize(uniforms.lightDir);
-        var shadingFactor = max(0, dot(toLight, normal(coords, size)));
+        var shadingFactor = max(0, dot(normal(coords), toLight));
         colour.r *= shadingFactor;
         colour.g *= shadingFactor;
         colour.b *= shadingFactor;
