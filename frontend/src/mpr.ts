@@ -7,23 +7,21 @@ import { RendererManager } from './manager';
 
 export class RendererMPR extends Renderer {
 
-    private settings: SettingsMPR;
-
     constructor(manager: RendererManager) {
         super(manager);
         this.renderShaderType = mpr;
-        this.settings = new SettingsMPR(manager);
+        this.settings = new SettingsMPR(this.renderID, manager);
         if (this.context.getVolume().getBitsPerVoxel() == 8) this.computeShaderType = mip8;
         else if (this.context.getVolume().getBitsPerVoxel() == 16) this.computeShaderType = mip16;
     }
 
     protected getRenderUniformData(): Float32Array {
-        return this.settings.getWWidthLevel();
+        return (this.settings as SettingsMPR).getWWidthLevel();
     }
 
     protected getComputeUniformData(): Float32Array {
         let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + 2);
-        computeUniformData.set([...this.camera.getViewMatrix(), ...this.settings.getSampleInfo()]);
+        computeUniformData.set([...this.camera.getViewMatrix(), ...(this.settings as SettingsMPR).getSampleInfo()]);
         return computeUniformData;
     }
 

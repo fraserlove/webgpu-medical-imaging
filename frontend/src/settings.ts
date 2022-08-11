@@ -19,9 +19,11 @@ export class RendererSettings {
     protected gui: GUI;
     protected folder: any;
     protected renderID: number;
+    protected manager: RendererManager;
 
-    constructor(manager: RendererManager) {
-        this.renderID = manager.highestIndex();
+    constructor(renderID: number, manager: RendererManager) {
+        this.renderID = renderID;
+        this.manager = manager;
         this.gui = new GUI({ autoPlace: false });
         this.gui.domElement.id = 'gui';
         manager.getContext().getContainer(this.renderID).appendChild(this.gui.domElement);
@@ -39,8 +41,8 @@ export class SettingsMPR extends RendererSettings {
     private slabCentre: number;
     private noSamples: number;
 
-    constructor(manager: RendererManager) {
-        super(manager);
+    constructor(renderID: number, manager: RendererManager) {
+        super(renderID, manager);
 
         let maxDepth = manager.getContext().getVolume().getDepth();
         this.slabCentre = maxDepth / 2;
@@ -59,8 +61,8 @@ export class SettingsMPR extends RendererSettings {
 
 export class SettingsSVR extends RendererSettings {
 
-    constructor(manager: RendererManager) {
-        super(manager);
+    constructor(renderID: number, manager: RendererManager) {
+        super(renderID, manager);
         this.folder.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer');
     }
 }

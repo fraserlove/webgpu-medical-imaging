@@ -6,13 +6,13 @@ import { GlobalSettings } from "./settings";
 
 export class RendererManager {
 
-    private renderers: Renderer[];
+    private renderers: Map<number, Renderer>;
     private context: Context;
     private settings: GlobalSettings;
 
     constructor(context) {
         this.context = context;
-        this.renderers = [];
+        this.renderers = new Map<number, Renderer>();
         this.settings = new GlobalSettings(this);
 
         window.onresize = () => {
@@ -21,37 +21,30 @@ export class RendererManager {
     }
 
     public getContext(): Context { return this.context; }
-    public highestIndex(): number { return this.renderers.length; }
 
     public render(): void {
-        for (let i = 0; i < this.renderers.length; i++) { this.renderers[i].render(); }
+        for (const [key, renderer] of this.renderers.entries()) { renderer.render(); }
     }
 
-    public addMPR(): void {
-        let renderer = new RendererMPR(this);
-        this.addRenderer(renderer);
-    }
+    public addMPR(): void { this.addRenderer(new RendererMPR(this)); }
 
-    public addSVR(): void {
-        let renderer = new RendererSVR(this);
-        this.addRenderer(renderer);
-    }
+    public addSVR(): void { this.addRenderer(new RendererSVR(this)); }
 
     private async addRenderer(renderer: Renderer): Promise<void> {
-        this.renderers.push(renderer);
+        this.renderers.set(renderer.getID(), renderer);
         this.resize();
         await renderer.start();
     }
 
     public destroyRenderer(rendererID: number): void {
         this.context.removeWindow(rendererID);
-        this.renderers.splice(rendererID);
+        this.renderers.delete(rendererID);
         this.resize();
     }
 
     public resize(): void {
-        for (let i = 0; i < this.renderers.length; i++) {
-            this.renderers[i].resize([window.innerWidth / this.renderers.length, window.innerHeight]);
+        for (const [key, renderer] of this.renderers.entries()) {
+            renderer.resize([window.innerWidth / this.renderers.size, window.innerHeight]);
         }
     }
 }

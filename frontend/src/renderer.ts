@@ -3,11 +3,13 @@ import { Camera } from './camera';
 import { imagePlane } from './vertices';
 import { Controller } from './controller';
 import { RendererManager } from './manager';
+import { RendererSettings } from './settings';
 
 export class Renderer {
     protected context: Context;
     protected camera: Camera;
     protected controller: Controller;
+    protected settings: RendererSettings;
 
     protected renderID: number;
     private size: number[];
@@ -33,10 +35,10 @@ export class Renderer {
     private renderPassDescriptor: GPURenderPassDescriptor;
 
     constructor(manager: RendererManager) {
-        this.renderID = manager.highestIndex();
+        this.renderID = (new Date()).getTime(); // Key in hashmap is time in milliseconds when created
         this.context = manager.getContext();
         this.camera = new Camera(this.context.getVolume());
-        this.controller = new Controller(this.context.newWindow(), this.camera);
+        this.controller = new Controller(this.context.newWindow(this.renderID), this.camera);
     }
 
     public start(): void {
@@ -264,4 +266,6 @@ export class Renderer {
             this.initBindGroups();
         }
     }
+
+    public getID(): number { return this.renderID; }
 }

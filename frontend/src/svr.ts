@@ -7,13 +7,12 @@ import { RendererManager } from './manager';
 
 export class RendererSVR extends Renderer {
 
-    private settings: SettingsSVR;
     private transferFunctionTexture: GPUTexture;
 
     constructor(manager: RendererManager) {
         super(manager);
         this.renderShaderType = svr;
-        this.settings = new SettingsSVR(manager);
+        this.settings = new SettingsSVR(this.renderID, manager);
         if (this.context.getVolume().getBitsPerVoxel() == 8) this.computeShaderType = ea8;
         else if (this.context.getVolume().getBitsPerVoxel() == 16) this.computeShaderType = ea16;
     }

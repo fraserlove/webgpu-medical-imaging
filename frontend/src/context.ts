@@ -9,56 +9,54 @@ export class Context {
     private device: GPUDevice;
     private queue: GPUQueue;
 
-    private containers: HTMLDivElement[];
-    private windows: HTMLCanvasElement[];
-    private contexts: GPUCanvasContext[];
+    private containers: Map<number, HTMLDivElement>;
+    private windows: Map<number, HTMLCanvasElement>;
+    private contexts: Map<number, GPUCanvasContext>;
 
     constructor(volume: Volume, transferFunction: TransferFunction) {
         this.volume = volume;
         this.transferFunction = transferFunction;
-        this.containers = [];
-        this.windows = [];
-        this.contexts = [];
+        this.containers = new Map<number, HTMLDivElement>();
+        this.windows = new Map<number, HTMLCanvasElement>();
+        this.contexts = new Map<number, GPUCanvasContext>();
     }
 
     public getVolume(): Volume { return this.volume; }
     public getTransferFunction(): TransferFunction { return this.transferFunction; }
     public getDevice(): GPUDevice { return this.device; }
     public getQueue(): GPUQueue { return this.queue; }
-    public getContainer(idx: number): HTMLDivElement { return this.containers[idx]; }
-    public getWindow(idx: number): HTMLCanvasElement { return this.windows[idx]; }
-    public getGPUContext(idx: number): GPUCanvasContext { return this.contexts[idx]; }
+    public getContainer(id: number): HTMLDivElement { return this.containers.get(id); }
+    public getWindow(id: number): HTMLCanvasElement { return this.windows.get(id); }
+    public getGPUContext(id: number): GPUCanvasContext { return this.contexts.get(id); }
     public displayFormat(): GPUTextureFormat { return navigator.gpu.getPreferredCanvasFormat(); }
 
-    public newWindow(): HTMLCanvasElement {
+    public newWindow(renderID: number): HTMLCanvasElement {
         let container = document.createElement('div');
         container.id = 'container';
-        this.containers.push(container);
+        this.containers.set(renderID, container);
 
         let window = document.createElement('canvas');
-        this.windows.push(window);
+        this.windows.set(renderID, window);
 
-        let context = this.windows[this.windows.length - 1].getContext('webgpu');
+        let context = window.getContext('webgpu');
         context.configure({ device: this.device, format: this.displayFormat(), alphaMode: 'premultiplied' });
-        this.contexts.push(context);
+        this.contexts.set(renderID, context);
             
         container.appendChild(window);
         document.body.appendChild(container);
         return window;
     }
 
-    public removeWindow(idx: number): void {
-        this.containers[idx].remove();
-        this.contexts[idx].unconfigure();
-
-        this.containers.splice(idx);
-        this.windows.splice(idx);
-        this.contexts.splice(idx);
+    public removeWindow(id: number): void {
+        this.containers.get(id).remove();
+        this.containers.delete(id);
+        this.windows.delete(id);
+        this.contexts.delete(id);
     }
 
-    public resizeWindow(idx: number, size: number[]): void { 
-        this.windows[idx].width = size[0];
-        this.windows[idx].height = size[1];
+    public resizeWindow(id: number, size: number[]): void { 
+        this.windows.get(id).width = size[0];
+        this.windows.get(id).height = size[1];
     }
 
     public async initWebGPU(): Promise<boolean> {
