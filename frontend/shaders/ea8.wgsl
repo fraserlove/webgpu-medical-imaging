@@ -34,12 +34,13 @@ fn intensity(sample: vec4<f32>) -> f32 {
     return sample.x * 65536; // 0 to 2^16
 }
 
-fn normal(pos: vec3<f32>, size: vec3<f32>) -> vec3<f32> {
+fn normal(pos: vec3<f32>) -> vec3<f32> {
+    var size = vec3<f32>(textureDimensions(volumeTexture));
     var delta = vec3<f32>(0, 0, 0);
     delta.x = intensity(textureSample(volumeTexture, volumeSampler, pos + vec3<f32>(1 / size.x, 0, 0))) - intensity(textureSample(volumeTexture, volumeSampler, pos - vec3<f32>(1 / size.x, 0, 0)));
     delta.y = intensity(textureSample(volumeTexture, volumeSampler, pos + vec3<f32>(0, 1 / size.y, 0))) - intensity(textureSample(volumeTexture, volumeSampler, pos - vec3<f32>(0, 1 / size.y, 0)));
     delta.z = intensity(textureSample(volumeTexture, volumeSampler, pos + vec3<f32>(0, 0, 1 / size.z))) - intensity(textureSample(volumeTexture, volumeSampler, pos - vec3<f32>(0, 0, 1 / size.z)));
-    return normalize(delta * vec3<f32>(f32(size.x) - 1.0 / 2.0 * uniforms.bbox.x, f32(size.y) - 1.0 / 2.0 * uniforms.bbox.y, f32(size.z) - 1.0 / 2.0 * uniforms.bbox.z));
+    return normalize(delta);
 }
 
 @fragment
@@ -61,12 +62,15 @@ fn frag_main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
         var transferCoords = vec2<i32>(i32(val) % i32(uniforms.transferWidth), i32(val) / i32(uniforms.transferWidth));
         var colour: vec4<f32> = textureLoad(transferTexture, transferCoords, 0);
 
-        // Shading - Lambert
-        var toLight = normalize(uniforms.lightDir);
-        var shadingFactor = max(0, dot(toLight, normal(coords, size)));
-        colour.r *= shadingFactor;
-        colour.g *= shadingFactor;
-        colour.b *= shadingFactor;
+        // Lighting - Blinn-Phong
+        var lightDir = normalize(uniforms.lightDir);
+        var viewDir = normalize(uniforms.viewDir);
+        var halfDir = normalize(lightDir + viewDir);
+        var specular = pow(max(0.0, dot(normal(coords), halfDir)), uniforms.shininess);
+        var diffuse = max(0.0, dot(normal(coords), lightDir));
+        colour.r = colour.r * diffuse + specular * uniforms.lightColour.r;
+        colour.g = colour.g * diffuse + specular * uniforms.lightColour.g;
+        colour.b = colour.b * diffuse + specular * uniforms.lightColour.b;
 
         // Composition
         if (colour.a == 0) { continue; }
