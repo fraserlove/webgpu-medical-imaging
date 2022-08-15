@@ -1,35 +1,30 @@
-import { GUI } from 'dat.gui';
+import { GUI } from 'lil-gui';
 import { RendererManager } from './manager';
 
 export class GlobalSettings {
     protected gui: GUI;
 
     constructor(manager: RendererManager) {
-        this.gui = new GUI({ autoPlace: false });
+        this.gui = new GUI({ title: 'Add Renderer', width: 120, autoPlace: false });
         this.gui.domElement.id = 'gui-global';
         document.body.appendChild(this.gui.domElement);
 
-        const folder = this.gui.addFolder('Global Settings');
-        folder.add(manager, 'addMPR');
-        folder.add(manager, 'addSVR');
+        this.gui.add(manager, 'addMPR');
+        this.gui.add(manager, 'addSVR');
     }
 }
 
 export class RendererSettings {
     protected gui: GUI;
-    protected folder: any;
     protected renderID: number;
     protected manager: RendererManager;
 
     constructor(renderID: number, manager: RendererManager) {
         this.renderID = renderID;
         this.manager = manager;
-        this.gui = new GUI({ autoPlace: false });
+        this.gui = new GUI({ title: 'Renderer', width: 220, autoPlace: false });
         this.gui.domElement.id = 'gui';
         manager.getContext().getContainer(this.renderID).appendChild(this.gui.domElement);
-
-        this.folder = this.gui.addFolder('Render Settings');
-        this.folder.open();
     }
 
     public getRenderSettings(): Float32Array { return new Float32Array(1); }
@@ -46,16 +41,17 @@ export class SettingsMPR extends RendererSettings {
 
     constructor(renderID: number, manager: RendererManager) {
         super(renderID, manager);
+        this.gui.title('MPR Settings');
 
         let maxDepth = manager.getContext().getVolume().getDepth();
         this.slabCentre = maxDepth / 2;
         this.noSamples = maxDepth;
 
-        this.folder.add(this, 'noSamples', 0, maxDepth);
-        this.folder.add(this, 'slabCentre', 0, maxDepth);
-        this.folder.add(this, 'wWidth', 0, 0.05);
-        this.folder.add(this, 'wLevel', 0.48, 0.52, 0.0001);
-        this.folder.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer');
+        this.gui.add(this, 'noSamples', 0, maxDepth);
+        this.gui.add(this, 'slabCentre', 0, maxDepth);
+        this.gui.add(this, 'wWidth', 0, 0.05);
+        this.gui.add(this, 'wLevel', 0.48, 0.52, 0.0001);
+        this.gui.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer');
     }
 
     public getComputeSettings(): Float32Array { return new Float32Array([this.slabCentre, this.noSamples]); } 
@@ -65,16 +61,17 @@ export class SettingsMPR extends RendererSettings {
 export class SettingsSVR extends RendererSettings {
 
     private shininess: number = 270;
-    private lightColour: number[] = [255, 255, 255];
+    private lightColour: number[] = [1, 1, 1];
     private includeSpecular: boolean = true;
 
     constructor(renderID: number, manager: RendererManager) {
         super(renderID, manager);
+        this.gui.title('SVR Settings');
 
-        this.folder.add(this, 'shininess', 80, 400);
-        this.folder.addColor(this, 'lightColour');
-        this.folder.add(this, 'includeSpecular');
-        this.folder.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer');
+        this.gui.add(this, 'shininess', 80, 400);
+        this.gui.addColor(this, 'lightColour');
+        this.gui.add(this, 'includeSpecular');
+        this.gui.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer');
     }
 
     public getColour(): number[] {
