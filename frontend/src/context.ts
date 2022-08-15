@@ -72,6 +72,7 @@ export class Context {
             return false;
         }
         console.log('CONTEXT: Initialised WebGPU.');
+        this.transferFunction.setWidth(this.device.limits.maxTextureDimension1D);
         return true;
     }
 }

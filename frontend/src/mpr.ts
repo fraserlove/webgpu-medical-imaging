@@ -15,26 +15,11 @@ export class RendererMPR extends Renderer {
         else if (this.context.getVolume().getBitsPerVoxel() == 16) this.computeShaderType = mip16;
     }
 
-    protected getRenderUniformData(): Float32Array {
-        return (this.settings as SettingsMPR).getWWidthLevel();
-    }
-
     protected getComputeUniformData(): Float32Array {
-        let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + 2);
-        computeUniformData.set([...this.camera.getViewMatrix(), ...(this.settings as SettingsMPR).getSampleInfo()]);
+        let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + 
+                                                    (this.settings as SettingsMPR).getComputeSettings().length);
+        computeUniformData.set([...this.camera.getViewMatrix(), 
+                                ...(this.settings as SettingsMPR).getComputeSettings()]);
         return computeUniformData;
-    }
-
-    protected initBindGroups(): void {
-        super.initBindGroups();
-        
-        this.computeBindGroup = this.context.getDevice().createBindGroup({
-            layout: this.computeBindGroupLayout,
-            entries: [
-                { binding: 0, resource: { buffer: this.computeUniformBuffer } },
-                { binding: 1, resource: this.volumeTexture.createView() },
-                { binding: 2, resource: this.sampler }
-            ]
-        });
     }
 }

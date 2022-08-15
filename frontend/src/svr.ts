@@ -17,38 +17,13 @@ export class RendererSVR extends Renderer {
         else if (this.context.getVolume().getBitsPerVoxel() == 16) this.computeShaderType = ea16;
     }
 
-    public start(): void {
-        this.context.getTransferFunction().setWidth(this.context.getDevice().limits.maxTextureDimension1D);
-        super.start();
-    }
-
     protected initPipelineLayouts(): void {
-        super.initPipelineLayouts();
-        
-        this.computeBindGroupLayout = this.context.getDevice().createBindGroupLayout({
-            entries: [
-                {
-                    binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    buffer: { type: 'uniform' }
-                } as GPUBindGroupLayoutEntry,
-                {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: { sampleType: 'float', viewDimension: '3d' }
-                } as GPUBindGroupLayoutEntry,
-                {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: { type: 'filtering' }
-                } as GPUBindGroupLayoutEntry,
-                {
-                    binding: 3,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: { sampleType: 'unfilterable-float', viewDimension: '2d' }
-                } as GPUBindGroupLayoutEntry
-            ]
+        this.computeBindGroupLayoutEntries.push({
+            binding: 3,
+            visibility: GPUShaderStage.FRAGMENT,
+            texture: { sampleType: 'unfilterable-float', viewDimension: '2d' }
         });
+        super.initPipelineLayouts();
     }
 
     protected initResources(): void {
@@ -70,23 +45,27 @@ export class RendererSVR extends Renderer {
         this.context.getQueue().writeTexture({ texture: this.transferFunctionTexture }, this.context.getTransferFunction().getData(), imageDataLayout, this.context.getTransferFunction().size());
     }
 
-    protected initBindGroups(): void {
-        super.initBindGroups();
-
-        this.computeBindGroup = this.context.getDevice().createBindGroup({
-            layout: this.computeBindGroupLayout,
-            entries: [
-                { binding: 0, resource: { buffer: this.computeUniformBuffer } },
-                { binding: 1, resource: this.volumeTexture.createView() },
-                { binding: 2, resource: this.sampler },
-                { binding: 3, resource: this.transferFunctionTexture.createView() }
-            ]
-        });
+    protected initComputeGroup(): void {
+        this.computeBindGroupEntries.push({ binding: 3, resource: this.transferFunctionTexture.createView() });
+        super.initComputeGroup()
     }
 
     protected getComputeUniformData(): Float32Array {
-        let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + this.camera.getLightDir().length + this.context.getVolume().getBoundingBox().length + 1);
-        computeUniformData.set([...this.camera.getViewMatrix(), ...this.camera.getLightDir(), ...this.context.getVolume().getBoundingBox(), this.context.getTransferFunction().getWidth()]);
+        let paddingLength = 3; // length of padding (bytelength of padding is this value * 4)
+        let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + 
+                                                    this.camera.getLightDir().length + 
+                                                    this.camera.getViewDir().length + 
+                                                    this.context.getVolume().getBoundingBox().length + 
+                                                    (this.settings as SettingsSVR).getComputeSettings().length + 
+                                                    1 + paddingLength);
+                                                    
+        // extra zeros are required padding, see - https://www.w3.org/TR/WGSL/#alignment-and-size
+        computeUniformData.set([...this.camera.getViewMatrix(), 
+                                ...this.camera.getLightDir(), 0, 
+                                ...this.camera.getViewDir(), 0, 
+                                ...this.context.getVolume().getBoundingBox(), 0, 
+                                ...(this.settings as SettingsSVR).getComputeSettings(), 
+                                this.context.getTransferFunction().getWidth()]);
         return computeUniformData;
     }
 }

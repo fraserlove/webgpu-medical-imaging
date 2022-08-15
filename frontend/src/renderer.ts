@@ -24,6 +24,9 @@ export class Renderer {
     protected volumeTexture: GPUTexture;
     protected sampler: GPUSampler;
 
+    protected computeBindGroupEntries: GPUBindGroupEntry[];
+    protected computeBindGroupLayoutEntries: GPUBindGroupLayoutEntry[];
+
     protected renderBindGroupLayout: GPUBindGroupLayout;
     protected computeBindGroupLayout: GPUBindGroupLayout;
     protected renderBindGroup: GPUBindGroup;
@@ -39,6 +42,9 @@ export class Renderer {
         this.context = manager.getContext();
         this.camera = new Camera(this.context.getVolume());
         this.controller = new Controller(this.context.newWindow(this.renderID), this.camera);
+
+        this.computeBindGroupEntries = [];
+        this.computeBindGroupLayoutEntries = [];
     }
 
     public start(): void {
@@ -48,7 +54,8 @@ export class Renderer {
         console.log('RENDERER: Initialising Resources...');
         this.initBuffers();
         this.initResources();
-        this.initBindGroups();
+        this.initComputeGroup();
+        this.initRenderGroup();
         console.log('RENDERER: Rendering...');
     }
 
@@ -68,24 +75,24 @@ export class Renderer {
             ]
         });
 
+        this.computeBindGroupLayoutEntries.push({ 
+            binding: 0, 
+            visibility: GPUShaderStage.FRAGMENT, 
+            buffer: { type: 'uniform' } 
+        });
+        this.computeBindGroupLayoutEntries.push({ 
+            binding: 1,
+            visibility: GPUShaderStage.FRAGMENT, 
+            texture: { sampleType: 'float', viewDimension: '3d' } 
+        });
+        this.computeBindGroupLayoutEntries.push({ 
+            binding: 2, 
+            visibility: GPUShaderStage.FRAGMENT, 
+            sampler: { type: 'filtering' } 
+        });
+
         this.computeBindGroupLayout = this.context.getDevice().createBindGroupLayout({
-            entries: [
-                {
-                    binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    buffer: { type: 'uniform' }
-                } as GPUBindGroupLayoutEntry,
-                {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: { sampleType: 'float', viewDimension: '3d' }
-                } as GPUBindGroupLayoutEntry,
-                {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: { type: 'filtering' }
-                } as GPUBindGroupLayoutEntry
-            ]
+            entries: this.computeBindGroupLayoutEntries
         });
     }
 
@@ -205,7 +212,18 @@ export class Renderer {
         };
     }
 
-    protected initBindGroups(): void {
+    protected initComputeGroup(): void {
+        this.computeBindGroupEntries.push({ binding: 0, resource: { buffer: this.computeUniformBuffer } });
+        this.computeBindGroupEntries.push({ binding: 1, resource: this.volumeTexture.createView() });
+        this.computeBindGroupEntries.push({ binding: 2, resource: this.sampler });
+
+        this.computeBindGroup = this.context.getDevice().createBindGroup({
+            layout: this.computeBindGroupLayout,
+            entries: this.computeBindGroupEntries
+        });
+    }
+
+    protected initRenderGroup(): void {
         this.renderBindGroup = this.context.getDevice().createBindGroup({
             layout: this.renderBindGroupLayout,
             entries: [
@@ -238,11 +256,11 @@ export class Renderer {
     }
 
     protected getRenderUniformData(): Float32Array {
-        return new Float32Array(1);
+        return this.settings.getRenderSettings();
     }
 
     protected getComputeUniformData(): Float32Array {
-        return new Float32Array(1);
+        return this.settings.getComputeSettings();
     }
 
     public render(): void {
@@ -263,7 +281,7 @@ export class Renderer {
                 format: 'rgba16float',
                 usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
             }); 
-            this.initBindGroups();
+            this.initRenderGroup();
         }
     }
 

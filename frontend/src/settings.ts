@@ -31,6 +31,9 @@ export class RendererSettings {
         this.folder = this.gui.addFolder('Render Settings');
         this.folder.open();
     }
+
+    public getRenderSettings(): Float32Array { return new Float32Array(1); }
+    public getComputeSettings(): Float32Array { return new Float32Array(1); }
 }
 
 export class SettingsMPR extends RendererSettings {
@@ -55,14 +58,22 @@ export class SettingsMPR extends RendererSettings {
         this.folder.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer');
     }
 
-    public getWWidthLevel(): Float32Array { return new Float32Array([this.wWidth, this.wLevel]); }
-    public getSampleInfo(): Float32Array { return new Float32Array([this.slabCentre, this.noSamples]); } 
+    public getComputeSettings(): Float32Array { return new Float32Array([this.slabCentre, this.noSamples]); } 
+    public getRenderSettings(): Float32Array { return new Float32Array([this.wWidth, this.wLevel]); }
 }
 
 export class SettingsSVR extends RendererSettings {
 
+    private shininess: number = 80;
+    private lightColour: number[] = [255, 255, 255];
+
     constructor(renderID: number, manager: RendererManager) {
         super(renderID, manager);
+
+        this.folder.add(this, 'shininess', 0, 200);
+        this.folder.addColor(this, 'lightColour');
         this.folder.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer');
     }
+
+    public getComputeSettings(): Float32Array { return new Float32Array([...this.lightColour, this.shininess]); }
 }

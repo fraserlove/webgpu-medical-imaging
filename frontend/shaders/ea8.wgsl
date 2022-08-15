@@ -1,7 +1,10 @@
 struct Uniforms {
     transform: mat4x4<f32>,
     lightDir: vec3<f32>,
+    viewDir: vec3<f32>,
     bbox: vec3<f32>,
+    lightColour: vec3<f32>,
+    shininess: f32,
     transferWidth: f32
 };
 

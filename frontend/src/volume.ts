@@ -27,7 +27,7 @@ export class Volume {
         this.data = (await axios.get('http://localhost:8080/volume/data', { responseType: 'arraybuffer' })).data;
 
         let boundingBox = (await axios.get('http://localhost:8080/volume/bounding_box')).data;
-        this.boundingBox = boundingBox.substr(1, boundingBox.length-2).split(",");;
+        this.boundingBox = boundingBox.substr(1, boundingBox.length - 5).split(",");
 
         this.findFormat();
     }
