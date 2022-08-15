@@ -28,7 +28,7 @@ fn frag_main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
         // Check transformed coordinate is still inside bounds - removes texture clamp artefact
         if (transformed.x < size.x && transformed.x > 0 && transformed.y < size.y && transformed.y > 0 && transformed.z < size.z && transformed.z > 0) {
             // Intensity stored over 8-bit red and green channels
-            var intensity = texel.x;
+            var intensity = sample.x;
             if (intensity > maxIntensity) {
                 maxIntensity = intensity;
             }
