@@ -64,16 +64,23 @@ export class SettingsMPR extends RendererSettings {
 
 export class SettingsSVR extends RendererSettings {
 
-    private shininess: number = 80;
+    private shininess: number = 270;
     private lightColour: number[] = [255, 255, 255];
+    private includeSpecular: boolean = true;
 
     constructor(renderID: number, manager: RendererManager) {
         super(renderID, manager);
 
-        this.folder.add(this, 'shininess', 0, 200);
+        this.folder.add(this, 'shininess', 80, 400);
         this.folder.addColor(this, 'lightColour');
+        this.folder.add(this, 'includeSpecular');
         this.folder.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer');
     }
 
-    public getComputeSettings(): Float32Array { return new Float32Array([...this.lightColour, this.shininess]); }
+    public getColour(): number[] {
+        if (this.includeSpecular) return this.lightColour;
+        else return [0, 0, 0];
+    }
+
+    public getComputeSettings(): Float32Array { return new Float32Array([...this.getColour(), this.shininess]); }
 }

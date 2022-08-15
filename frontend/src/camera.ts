@@ -25,7 +25,7 @@ export class Camera {
         this.viewDir = this.viewUp = this.viewSide = vec3.create();
         this.camera = this.view = mat4.create();
         
-        this.lightDir = vec3.fromValues(0, 0, 1);
+        this.lightDir = vec3.fromValues(0, 1, 0);
 
         this.setScale(0.4);
         this.setPanCine(0, 0, this.volumeBounds[2] / 2);
