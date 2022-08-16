@@ -51,18 +51,16 @@ export class RendererSVR extends Renderer {
     }
 
     protected getComputeUniformData(): Float32Array {
-        let paddingLength = 3; // length of padding (bytelength of padding is this value * 4)
+        let paddingLength = 2; // length of padding (bytelength of padding is this value * 4)
         let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + 
                                                     this.camera.getLightDir().length + 
-                                                    this.camera.getViewDir().length + 
                                                     this.context.getVolume().getBoundingBox().length + 
                                                     (this.settings as SettingsSVR).getComputeSettings().length + 
                                                     1 + paddingLength);
                                                     
         // extra zeros are required padding, see - https://www.w3.org/TR/WGSL/#alignment-and-size
         computeUniformData.set([...this.camera.getViewMatrix(), 
-                                ...this.camera.getLightDir(), 0, 
-                                ...this.camera.getViewDir(), 0, 
+                                ...this.camera.getLightDir(), 0,
                                 ...this.context.getVolume().getBoundingBox(), 0, 
                                 ...(this.settings as SettingsSVR).getComputeSettings(), 
                                 this.context.getTransferFunction().getWidth()]);

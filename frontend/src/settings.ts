@@ -60,7 +60,8 @@ export class SettingsMPR extends RendererSettings {
 
 export class SettingsSVR extends RendererSettings {
 
-    private shininess: number = 270;
+    private shininess: number = 50;
+    private brightness: number = 1;
     private lightColour: number[] = [1, 1, 1];
     private includeSpecular: boolean = true;
 
@@ -68,7 +69,8 @@ export class SettingsSVR extends RendererSettings {
         super(renderID, manager);
         this.gui.title('SVR Settings');
 
-        this.gui.add(this, 'shininess', 80, 400);
+        this.gui.add(this, 'shininess', 0, 100);
+        this.gui.add(this, 'brightness', 0, 2);
         this.gui.addColor(this, 'lightColour');
         this.gui.add(this, 'includeSpecular');
         this.gui.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer');
@@ -79,5 +81,5 @@ export class SettingsSVR extends RendererSettings {
         else return [0, 0, 0];
     }
 
-    public getComputeSettings(): Float32Array { return new Float32Array([...this.getColour(), this.shininess]); }
+    public getComputeSettings(): Float32Array { return new Float32Array([...this.getColour(), this.brightness, this.shininess]); }
 }

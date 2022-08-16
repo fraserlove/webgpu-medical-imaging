@@ -24,9 +24,9 @@ export class Camera {
 
         this.viewDir = this.viewUp = this.viewSide = vec3.create();
         this.camera = this.view = mat4.create();
-        
-        this.lightDir = vec3.fromValues(0, 1, 0);
+        this.lightDir = vec3.create();
 
+        this.setLighting(1, 0);
         this.setScale(0.4);
         this.setPanCine(0, 0, this.volumeBounds[2] / 2);
         this.setViewDir(vec3.fromValues(0, 1, 0), vec3.fromValues(0, 0, 1));
@@ -59,7 +59,6 @@ export class Camera {
     public getCameraMatrix(): Float32Array { this.CalculateViewMatrix(); return this.camera as Float32Array; }
     public getViewMatrix(): Float32Array { this.CalculateViewMatrix(); return this.view as Float32Array; }
     public getLightDir(): Float32Array { return this.lightDir as Float32Array; }
-    public getViewDir(): Float32Array { return this.viewDir as Float32Array; }
 
     private volumeCentre(): vec3 { return vec3.fromValues(-this.volumeBounds[0] / 2, -this.volumeBounds[1] / 2, -this.volumeBounds[2] / 2); }
     private imageCentre(): vec3 { return vec3.fromValues(this.imageSize[0] / 2, this.imageSize[1] / 2, 0); }
@@ -103,14 +102,18 @@ export class Camera {
         vec3.transformMat4(this.viewUp, this.viewUp, mat4.fromRotation(mat4.create(), dy, this.viewSide));
     }
 
-    public updateLighting(dlong: number, dlat: number): void {
-        let lat = (Math.asin(this.lightDir[2])) + dlat;
-        let long = ((Math.atan2(this.lightDir[1], this.lightDir[0]))) + dlong;
-
+    public setLighting(long: number, lat: number): void {
+        console.log(long + " " + lat);
         this.lightDir[0] = Math.cos(lat) * Math.cos(long);
         this.lightDir[1] = Math.cos(lat) * Math.sin(long);
         this.lightDir[2] = Math.sin(lat);
         vec3.normalize(this.lightDir, this.lightDir);
+    }
+
+    public updateLighting(dlong: number, dlat: number): void {
+        let lat = (Math.asin(this.lightDir[2])) + dlat;
+        let long = ((Math.atan2(this.lightDir[1], this.lightDir[0]))) + dlong;
+        this.setLighting(long, lat);
     }
 
     public resize(size: number[]): void { this.imageSize = size; }

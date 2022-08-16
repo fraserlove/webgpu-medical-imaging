@@ -1,9 +1,9 @@
 struct Uniforms {
     transform: mat4x4<f32>,
-    lightDir: vec3<f32>,
-    viewDir: vec3<f32>,
+    lightPos: vec3<f32>,
     bbox: vec3<f32>,
     lightColour: vec3<f32>,
+    brightness: f32,
     shininess: f32,
     transferWidth: f32
 };
@@ -63,14 +63,15 @@ fn frag_main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
         var colour: vec4<f32> = textureLoad(transferTexture, transferCoords, 0);
 
         // Lighting - Blinn-Phong
-        var lightDir = normalize(uniforms.lightDir);
-        var viewDir = normalize(uniforms.viewDir);
+        var lightDir = normalize(uniforms.lightPos - coords);
+        var viewDir = normalize(coords);
         var halfDir = normalize(lightDir + viewDir);
         var specular = pow(max(0.0, dot(normal(coords), halfDir)), uniforms.shininess);
         var diffuse = max(0.0, dot(normal(coords), lightDir));
         colour.r = colour.r * diffuse + specular * uniforms.lightColour.r;
         colour.g = colour.g * diffuse + specular * uniforms.lightColour.g;
         colour.b = colour.b * diffuse + specular * uniforms.lightColour.b;
+        colour = uniforms.brightness * colour;
 
         // Composition
         if (colour.a == 0) { continue; }
