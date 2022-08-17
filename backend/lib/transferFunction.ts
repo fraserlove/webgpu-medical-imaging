@@ -1,27 +1,21 @@
-const convert = require('xml-js');
-const fs = require('fs');
-
 export class TransferFunction {
     
-    private version: number;
-    private pixelFormat: string;
-    private size: number;
+    private noColours: number;
+    private colourFormat: string;
     private filename: string;
 
-    constructor(path: string) {
-        const xml = fs.readFileSync(path, 'utf8');
-        const options = {compact: true, textKey: '_'};
-        const result = convert.xml2js(xml, options);
-
-        this.version = result['Transfer_Function']['Version']['_'];
-        this.pixelFormat = result['Transfer_Function']['Pixel_Format']['_'];
-        this.size = result['Transfer_Function']['Size']['_'];
-        this.filename = result['Transfer_Function']['Filename']['_'];   
+    constructor(meta: any[]) {
+        this.noColours = Number(meta['Size']['_']);
+        this.filename = meta['Filename']['_']; 
+        
+        this.findFormat(meta['Pixel_Format']['_']);
     }
 
-    public getVersion(): number { return this.version; }
-    public getSize(): number { return this.size; }
-    public getPixelFormat(): string { return this.pixelFormat; }
+    private findFormat(format: string) {
+        if (format == 'rgba32f') this.colourFormat = 'rgba32float';
+        else console.error('Invalid pixel format for transfer function texture.');
+    }
+
     public getFilename(): string { return this.filename; }
-    
+
 }

@@ -11,8 +11,8 @@ export class RendererMPR extends Renderer {
         super(manager);
         this.renderShaderType = mpr;
         this.settings = new SettingsMPR(this.renderID, manager);
-        if (this.context.getVolume().getBitsPerVoxel() == 8) this.computeShaderType = mip8;
-        else if (this.context.getVolume().getBitsPerVoxel() == 16) this.computeShaderType = mip16;
+        if (this.context.getVolume().bitsPerVoxel == 8) this.computeShaderType = mip8;
+        else if (this.context.getVolume().bitsPerVoxel == 16) this.computeShaderType = mip16;
     }
 
     protected getComputeUniformData(): Float32Array {

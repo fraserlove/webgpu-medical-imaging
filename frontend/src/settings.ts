@@ -43,12 +43,12 @@ export class SettingsMPR extends RendererSettings {
         super(renderID, manager);
         this.gui.title('MPR Settings');
 
-        let maxDepth = manager.getContext().getVolume().getDepth();
-        this.slabCentre = maxDepth / 2;
+        let maxDepth = manager.getContext().getVolume().size[2];
+        this.slabCentre = Math.round(maxDepth / 2);
         this.noSamples = maxDepth;
 
-        this.gui.add(this, 'noSamples', 0, maxDepth);
-        this.gui.add(this, 'slabCentre', 0, maxDepth);
+        this.gui.add(this, 'noSamples', 0, maxDepth, 1);
+        this.gui.add(this, 'slabCentre', 0, maxDepth, 1);
         this.gui.add(this, 'wWidth', 0, 0.05);
         this.gui.add(this, 'wLevel', 0.48, 0.52, 0.0001);
         this.gui.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer');

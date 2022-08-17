@@ -187,20 +187,20 @@ export class Renderer {
         });
 
         this.volumeTexture = this.context.getDevice().createTexture({
-            size: this.context.getVolume().size(),
+            size: this.context.getVolume().size,
             // rg8unorm or r8unorm - red(low bits), green(high bits)
-            format: this.context.getVolume().getTextureFormat(),
+            format: this.context.getVolume().textureFormat,
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
             dimension: '3d'
         });
 
         const imageDataLayout = {
             offset: 0,
-            bytesPerRow: this.context.getVolume().getBytesPerLine(),
-            rowsPerImage: this.context.getVolume().getHeight()
+            bytesPerRow: this.context.getVolume().bytesPerLine,
+            rowsPerImage: this.context.getVolume().size[1]
         };
 
-        this.context.getQueue().writeTexture({ texture: this.volumeTexture }, this.context.getVolume().getData(), imageDataLayout, this.context.getVolume().size());
+        this.context.getQueue().writeTexture({ texture: this.volumeTexture }, this.context.getVolume().data, imageDataLayout, this.context.getVolume().size);
 
         this.renderPassDescriptor = {
             colorAttachments: [{

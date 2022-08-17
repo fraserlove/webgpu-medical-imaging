@@ -1,5 +1,4 @@
 import { mat4, vec3 } from 'gl-matrix';
-import { Volume } from './volume';
 
 export class Camera {
     private viewDir: vec3; // Points towards volume - z-axis for camera
@@ -18,9 +17,9 @@ export class Camera {
     private volumeBounds: number[];
     private volumeDataScale: number;
 
-    constructor(volume: Volume) {
-        this.volumeBounds = volume.getBoundingBox();
-        this.volumeDataScale = volume.volumeDataScale();
+    constructor(volume: any) {
+        this.volumeBounds = volume.boundingBox;
+        this.volumeDataScale = volume.boundingBox[2] / volume.size[2];
 
         this.viewDir = this.viewUp = this.viewSide = vec3.create();
         this.camera = this.view = mat4.create();
@@ -103,7 +102,6 @@ export class Camera {
     }
 
     public setLighting(long: number, lat: number): void {
-        console.log(long + " " + lat);
         this.lightDir[0] = Math.cos(lat) * Math.cos(long);
         this.lightDir[1] = Math.cos(lat) * Math.sin(long);
         this.lightDir[2] = Math.sin(lat);

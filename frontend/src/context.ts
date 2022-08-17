@@ -1,10 +1,6 @@
-import { Volume } from './volume';
-import { TransferFunction } from './transferFunction';
-
 export class Context {
-    private volume: Volume;
-    private transferFunction: TransferFunction;
-
+    private volume: any;
+    private transferFunction: any;
     private adapter: GPUAdapter;
     private device: GPUDevice;
     private queue: GPUQueue;
@@ -13,22 +9,35 @@ export class Context {
     private windows: Map<number, HTMLCanvasElement>;
     private contexts: Map<number, GPUCanvasContext>;
 
-    constructor(volume: Volume, transferFunction: TransferFunction) {
-        this.volume = volume;
-        this.transferFunction = transferFunction;
+    constructor() {
         this.containers = new Map<number, HTMLDivElement>();
         this.windows = new Map<number, HTMLCanvasElement>();
         this.contexts = new Map<number, GPUCanvasContext>();
     }
 
-    public getVolume(): Volume { return this.volume; }
-    public getTransferFunction(): TransferFunction { return this.transferFunction; }
+    public getVolume(): any { return this.volume; }
+    public getTransferFunction(): any { return this.transferFunction; }
     public getDevice(): GPUDevice { return this.device; }
     public getQueue(): GPUQueue { return this.queue; }
     public getContainer(id: number): HTMLDivElement { return this.containers.get(id); }
     public getWindow(id: number): HTMLCanvasElement { return this.windows.get(id); }
     public getGPUContext(id: number): GPUCanvasContext { return this.contexts.get(id); }
     public displayFormat(): GPUTextureFormat { return navigator.gpu.getPreferredCanvasFormat(); }
+
+    public async loadVolume(): Promise<void> {
+        console.log('CONTEXT: Loading Volume...');
+        let volumes = await (await fetch('http://localhost:8080/volumes')).json();
+        this.volume = volumes[0];
+        this.volume.data = await (await fetch('http://localhost:8080/volume/' + this.volume.filename)).arrayBuffer();
+        //for (let i = 0; i < volumes.length; i++) console.log(volumes[i]);
+    }
+
+    public async loadTransferFunction(): Promise<void> {
+        console.log('CONTEXT: Loading Transfer Function...');
+        let transferFunctions = await (await fetch('http://localhost:8080/transfer_functions')).json();
+        this.transferFunction = transferFunctions[0];
+        this.transferFunction.data = await (await fetch('http://localhost:8080/transfer_function/' + this.transferFunction.filename)).arrayBuffer();
+    }
 
     public newWindow(renderID: number): HTMLCanvasElement {
         let container = document.createElement('div');
@@ -72,7 +81,7 @@ export class Context {
             return false;
         }
         console.log('CONTEXT: Initialised WebGPU.');
-        this.transferFunction.setWidth(this.device.limits.maxTextureDimension1D);
+        this.transferFunction.size = [this.device.limits.maxTextureDimension1D, this.transferFunction.noColours / this.device.limits.maxTextureDimension1D];
         return true;
     }
 }

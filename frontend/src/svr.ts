@@ -13,8 +13,8 @@ export class RendererSVR extends Renderer {
         super(manager);
         this.renderShaderType = svr;
         this.settings = new SettingsSVR(this.renderID, manager);
-        if (this.context.getVolume().getBitsPerVoxel() == 8) this.computeShaderType = ea8;
-        else if (this.context.getVolume().getBitsPerVoxel() == 16) this.computeShaderType = ea16;
+        if (this.context.getVolume().bitsPerVoxel == 8) this.computeShaderType = ea8;
+        else if (this.context.getVolume().bitsPerVoxel == 16) this.computeShaderType = ea16;
     }
 
     protected initPipelineLayouts(): void {
@@ -30,19 +30,19 @@ export class RendererSVR extends Renderer {
         super.initResources();
 
         this.transferFunctionTexture = this.context.getDevice().createTexture({
-            size: this.context.getTransferFunction().size(),
-            format: this.context.getTransferFunction().getColourFormat(),
+            size: this.context.getTransferFunction().size,
+            format: this.context.getTransferFunction().colourFormat,
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
             dimension: '2d'
         });
 
         const imageDataLayout = {
             offset: 0,
-            bytesPerRow: this.context.getTransferFunction().getBytesPerRow(),
-            rowsPerImage: this.context.getTransferFunction().getRowsPerImage()
+            bytesPerRow: this.context.getTransferFunction().size[0] * 4 * 4,
+            rowsPerImage: this.context.getTransferFunction().size[1]
         };
 
-        this.context.getQueue().writeTexture({ texture: this.transferFunctionTexture }, this.context.getTransferFunction().getData(), imageDataLayout, this.context.getTransferFunction().size());
+        this.context.getQueue().writeTexture({ texture: this.transferFunctionTexture }, this.context.getTransferFunction().data, imageDataLayout, this.context.getTransferFunction().size);
     }
 
     protected initComputeGroup(): void {
@@ -54,16 +54,16 @@ export class RendererSVR extends Renderer {
         let paddingLength = 2; // length of padding (bytelength of padding is this value * 4)
         let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + 
                                                     this.camera.getLightDir().length + 
-                                                    this.context.getVolume().getBoundingBox().length + 
+                                                    this.context.getVolume().boundingBox.length + 
                                                     (this.settings as SettingsSVR).getComputeSettings().length + 
                                                     1 + paddingLength);
                                                     
         // extra zeros are required padding, see - https://www.w3.org/TR/WGSL/#alignment-and-size
         computeUniformData.set([...this.camera.getViewMatrix(), 
                                 ...this.camera.getLightDir(), 0,
-                                ...this.context.getVolume().getBoundingBox(), 0, 
+                                ...this.context.getVolume().boundingBox, 0, 
                                 ...(this.settings as SettingsSVR).getComputeSettings(), 
-                                this.context.getTransferFunction().getWidth()]);
+                                this.context.getTransferFunction().size[0]]);
         return computeUniformData;
     }
 }
