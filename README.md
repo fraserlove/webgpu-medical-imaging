@@ -19,7 +19,7 @@ npm run build
 ```
 Run the backend Node.js server, specifiying the path to the volume and transfer function metadata `.xml` files (The corresponding raw data describing the volume and transfer functions must be stored in the same directory as their `.xml` counterparts):
 ```
-npm start {path}/volume.xml {path}/transfer_function.tf1.xml
+npm start {path-to-resources}/
 ```
 The Node.js server runs on port `8080` and can be accessed in the browser by going to `http://localhost:8080`.
 

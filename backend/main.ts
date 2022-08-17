@@ -1,8 +1,9 @@
-const fs = require('fs');
-const convert = require('xml-js');
-const path = require('path');
-const express = require('express');
-const { Transform } = require('stream');
+import * as fs from 'fs';
+import * as convert from 'xml-js';
+import * as path from 'path';
+import * as express from 'express';
+import { Transform } from 'stream';
+
 import { Volume } from "./lib/volume";
 import { TransferFunction } from "./lib/transferFunction";
 

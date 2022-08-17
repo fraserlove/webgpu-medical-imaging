@@ -1,6 +1,6 @@
 import { Context } from './context';
 import { Camera } from './camera';
-import { imagePlane } from './vertices';
+import { vertices } from './vertices';
 import { Controller } from './controller';
 import { RendererManager } from './manager';
 import { RendererSettings } from './settings';
@@ -106,12 +106,12 @@ export class Renderer {
                 entryPoint: 'vert_main',
                 buffers: [
                         {
-                        arrayStride: imagePlane.vertexSize,
+                        arrayStride: vertices.vertexSize,
                         attributes: [
                             {
                                 // Position
                                 shaderLocation: 0,
-                                offset: imagePlane.positionOffset,
+                                offset: vertices.positionOffset,
                                 format: 'float32x2',
                             }
                         ]
@@ -134,12 +134,12 @@ export class Renderer {
                 entryPoint: 'vert_main',
                 buffers: [
                         {
-                        arrayStride: imagePlane.vertexSize,
+                        arrayStride: vertices.vertexSize,
                         attributes: [
                             {
                                 // Position
                                 shaderLocation: 0,
-                                offset: imagePlane.positionOffset,
+                                offset: vertices.positionOffset,
                                 format: 'float32x2',
                             }
                         ]
@@ -166,11 +166,11 @@ export class Renderer {
         });
 
         this.vertexBuffer = this.context.getDevice().createBuffer({
-            size: imagePlane.vertices.byteLength,
+            size: vertices.coords.byteLength,
             usage: GPUBufferUsage.VERTEX,
             mappedAtCreation: true
         });
-        new Float32Array(this.vertexBuffer.getMappedRange()).set(imagePlane.vertices);
+        new Float32Array(this.vertexBuffer.getMappedRange()).set(vertices.coords);
         this.vertexBuffer.unmap();
     }
 
@@ -240,7 +240,7 @@ export class Renderer {
         this.context.getQueue().writeBuffer(this.computeUniformBuffer, 0, this.getComputeUniformData());
         passEncoder.setBindGroup(0, this.computeBindGroup);
         passEncoder.setVertexBuffer(0, this.vertexBuffer);
-        passEncoder.draw(imagePlane.vertexCount);
+        passEncoder.draw(vertices.vertexCount);
         passEncoder.end();
     }
 
@@ -251,7 +251,7 @@ export class Renderer {
         this.context.getQueue().writeBuffer(this.renderUniformBuffer, 0, this.getRenderUniformData());
         passEncoder.setBindGroup(0, this.renderBindGroup);
         passEncoder.setVertexBuffer(0, this.vertexBuffer);
-        passEncoder.draw(imagePlane.vertexCount);
+        passEncoder.draw(vertices.vertexCount);
         passEncoder.end();
     }
 
