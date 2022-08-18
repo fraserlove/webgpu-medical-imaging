@@ -4,6 +4,7 @@ struct Uniforms {
     bbox: vec3<f32>,
     lightColour: vec3<f32>,
     brightness: f32,
+    slab: mat3x2<f32>,
     shininess: f32,
     transferWidth: f32
 };
@@ -56,6 +57,9 @@ fn frag_main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
 
     for (var k = max(0, near); k < far; k++) {
         var coords = pos.xyz + f32(k) * dir.xyz;
+        if (coords.x < uniforms.slab[0][0] || coords.x > uniforms.slab[0][1]) { continue; }
+        if (coords.y < uniforms.slab[1][0] || coords.y > uniforms.slab[1][1]) { continue; }
+        if (coords.z < uniforms.slab[2][0] || coords.z > uniforms.slab[2][1]) { continue; }
         // Scale down transformed coordinates to fit within 0->1 range
         coords = vec3<f32>(coords.x / size.x, coords.y / size.y, coords.z / size.z);
         var val = intensity(textureSample(volumeTexture, volumeSampler, coords));

@@ -74,9 +74,19 @@ export class SettingsSVR extends RendererSettings {
     private lightColour: number[] = [1, 1, 1];
     private includeSpecular: boolean = true;
 
+    private xStart: number;
+    private xEnd: number; 
+    private yStart: number;
+    private yEnd: number;
+    private zStart: number;
+    private zEnd: number;
+
     constructor(renderID: number, manager: RendererManager) {
         super(renderID, manager);
         this.gui.title('SVR Settings');
+
+        this.xStart = this.yStart = this.zStart = 0;
+        [this.xEnd, this.yEnd, this.zEnd] = manager.getContext().getVolume().size;
 
         let transferFunctionController = this.gui.add(manager.getContext().getTransferFunction(), 'filename', manager.getContext().getTransferFunctionIDs())
         transferFunctionController.name('Transfer Function');
@@ -86,6 +96,12 @@ export class SettingsSVR extends RendererSettings {
             manager.reloadRenderer(this.renderID);
         });
 
+        this.gui.add(this, 'xStart', 0, this.xEnd, 1).name('X Start');
+        this.gui.add(this, 'xEnd', 0, this.xEnd, 1).name('X End');
+        this.gui.add(this, 'yStart', 0, this.yEnd, 1).name('Y Start');
+        this.gui.add(this, 'yEnd', 0, this.yEnd, 1).name('Y End');
+        this.gui.add(this, 'zStart', 0, this.zEnd, 1).name('Z Start');
+        this.gui.add(this, 'zEnd', 0, this.zEnd, 1).name('Z End');
         this.gui.add(this, 'shininess', 0, 100).name('Shininess');
         this.gui.add(this, 'brightness', 0, 2).name('Brightness');
         this.gui.addColor(this, 'lightColour').name('Light Colour');
@@ -98,5 +114,8 @@ export class SettingsSVR extends RendererSettings {
         else return [0, 0, 0];
     }
 
-    public getComputeSettings(): Float32Array { return new Float32Array([...this.getColour(), this.brightness, this.shininess]); }
+    public getComputeSettings(): Float32Array { 
+        let slab = [this.xStart, this.xEnd, this.yStart, this.yEnd, this.zStart, this.zEnd]
+        return new Float32Array([...this.getColour(), this.brightness, ...slab, this.shininess]); 
+    }
 }
