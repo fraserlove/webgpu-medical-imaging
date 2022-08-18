@@ -22,14 +22,17 @@ export class RendererSettings {
     constructor(renderID: number, manager: RendererManager) {
         this.renderID = renderID;
         this.manager = manager;
-        this.gui = new GUI({ title: 'Renderer', width: 220, autoPlace: false });
+        this.gui = new GUI({ title: 'Renderer', width: 250, autoPlace: false });
         this.gui.domElement.id = 'gui';
 
-        this.gui.add(manager.getContext().getVolume(), 'filename', manager.getContext().getVolumeIDs()).onChange(async volumeID => {
+        let volumeController = this.gui.add(manager.getContext().getVolume(), 'filename', manager.getContext().getVolumeIDs())
+        volumeController.name('Volume');
+
+        volumeController.onChange(async volumeID => {
             await manager.getContext().loadVolume(volumeID);
             manager.reloadRenderer(this.renderID);
         });
-        
+
         manager.getContext().getContainer(this.renderID).appendChild(this.gui.domElement);
     }
 
@@ -53,11 +56,11 @@ export class SettingsMPR extends RendererSettings {
         this.slabCentre = Math.round(maxDepth / 2);
         this.noSamples = maxDepth;
 
-        this.gui.add(this, 'noSamples', 0, maxDepth, 1);
-        this.gui.add(this, 'slabCentre', 0, maxDepth, 1);
-        this.gui.add(this, 'wWidth', 0, 0.05);
-        this.gui.add(this, 'wLevel', 0.48, 0.52, 0.0001);
-        this.gui.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer');
+        this.gui.add(this, 'noSamples', 0, maxDepth, 1).name('Sample Count');
+        this.gui.add(this, 'slabCentre', 0, maxDepth, 1).name('Slab Centre');
+        this.gui.add(this, 'wWidth', 0, 0.05).name('Window Width');
+        this.gui.add(this, 'wLevel', 0.48, 0.52, 0.0001).name('Window Level');
+        this.gui.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer').name('Delete');
     }
 
     public getComputeSettings(): Float32Array { return new Float32Array([this.slabCentre, this.noSamples]); } 
@@ -75,11 +78,19 @@ export class SettingsSVR extends RendererSettings {
         super(renderID, manager);
         this.gui.title('SVR Settings');
 
-        this.gui.add(this, 'shininess', 0, 100);
-        this.gui.add(this, 'brightness', 0, 2);
-        this.gui.addColor(this, 'lightColour');
-        this.gui.add(this, 'includeSpecular');
-        this.gui.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer');
+        let transferFunctionController = this.gui.add(manager.getContext().getTransferFunction(), 'filename', manager.getContext().getTransferFunctionIDs())
+        transferFunctionController.name('Transfer Function');
+
+        transferFunctionController.onChange(async transferFunctionID => {
+            await manager.getContext().loadTransferFunction(transferFunctionID);
+            manager.reloadRenderer(this.renderID);
+        });
+
+        this.gui.add(this, 'shininess', 0, 100).name('Shininess');
+        this.gui.add(this, 'brightness', 0, 2).name('Brightness');
+        this.gui.addColor(this, 'lightColour').name('Light Colour');
+        this.gui.add(this, 'includeSpecular').name('Include Specular');
+        this.gui.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer').name('Delete');
     }
 
     public getColour(): number[] {

@@ -2,6 +2,7 @@ export class Context {
     private volume: any;
     private transferFunction: any;
     private volumeIDs: string[];
+    private transferFunctionIDs: string[];
     private adapter: GPUAdapter;
     private device: GPUDevice;
     private queue: GPUQueue;
@@ -12,6 +13,7 @@ export class Context {
 
     constructor() {
         this.volumeIDs = [];
+        this.transferFunctionIDs = [];
         this.containers = new Map<number, HTMLDivElement>();
         this.windows = new Map<number, HTMLCanvasElement>();
         this.contexts = new Map<number, GPUCanvasContext>();
@@ -20,6 +22,7 @@ export class Context {
     public getVolume(): any { return this.volume; }
     public getTransferFunction(): any { return this.transferFunction; }
     public getVolumeIDs(): string[] { return this.volumeIDs; }
+    public getTransferFunctionIDs(): string[] { return this.transferFunctionIDs; }
     public getDevice(): GPUDevice { return this.device; }
     public getQueue(): GPUQueue { return this.queue; }
     public getContainer(id: number): HTMLDivElement { return this.containers.get(id); }
@@ -35,7 +38,18 @@ export class Context {
                 this.volume.data = await (await fetch('http://localhost:8080/volume/' + this.volume.filename)).arrayBuffer();
             }
         }
-        console.log('CONTEXT: Loaded ' + this.volume.filename);
+        console.log('CONTEXT: Loaded Volume ' + this.volume.filename);
+    }
+
+    public async loadTransferFunction(id: string): Promise<void> {
+        let transferFunctions = await (await fetch('http://localhost:8080/transfer_functions')).json();
+        for (let i = 0; i < transferFunctions.length; i++) {
+            if (transferFunctions[i].filename == id)  {
+                this.transferFunction = transferFunctions[i];
+                this.transferFunction.data = await (await fetch('http://localhost:8080/transfer_function/' + this.transferFunction.filename)).arrayBuffer();
+            }
+        }
+        console.log('CONTEXT: Loaded Transfer Function ' + this.transferFunction.filename);
     }
 
     public async init(): Promise<void> {
@@ -53,8 +67,8 @@ export class Context {
     private async initTransferFunctions(): Promise<void> {
         console.log('CONTEXT: Loading Transfer Function...');
         let transferFunctions = await (await fetch('http://localhost:8080/transfer_functions')).json();
-        this.transferFunction = transferFunctions[0];
-        this.transferFunction.data = await (await fetch('http://localhost:8080/transfer_function/' + this.transferFunction.filename)).arrayBuffer();
+        for (let i = 0; i < transferFunctions.length; i++) this.transferFunctionIDs.push(transferFunctions[i].filename);
+        await this.loadTransferFunction(transferFunctions[0].filename);
     }
 
     public newWindow(renderID: number): HTMLCanvasElement {
