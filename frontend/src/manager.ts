@@ -26,12 +26,13 @@ export class RendererManager {
         for (const [key, renderer] of this.renderers.entries()) { renderer.render(); }
     }
 
-    public addMPR(): void { this.addRenderer(new RendererMPR(this)); }
+    public addMPR(renderID?: number): void { this.addRenderer(new RendererMPR(this, renderID)); }
 
-    public addSVR(): void { this.addRenderer(new RendererSVR(this)); }
+    public addSVR(renderID?: number): void { this.addRenderer(new RendererSVR(this, renderID)); }
 
-    private async addRenderer(renderer: Renderer): Promise<void> {
-        this.renderers.set(renderer.getID(), renderer);
+    private async addRenderer(renderer: Renderer, renderID?: number): Promise<void> {
+        if (renderID != undefined) this.renderers.set(renderID, renderer);
+        else this.renderers.set(renderer.getID(), renderer);
         this.resize();
         await renderer.start();
     }
@@ -46,5 +47,16 @@ export class RendererManager {
         for (const [key, renderer] of this.renderers.entries()) {
             renderer.resize([window.innerWidth / this.renderers.size, window.innerHeight]);
         }
+    }
+
+    public reloadRenderer(rendererID: number) {
+        console.log('MANAGER: Reloading renderer ' + rendererID + '...');
+        if (this.renderers.get(rendererID) instanceof RendererMPR) {
+            this.destroyRenderer(rendererID); this.addMPR(rendererID);
+        }
+        else if (this.renderers.get(rendererID) instanceof RendererSVR) {
+            this.destroyRenderer(rendererID); this.addSVR(rendererID);   
+        }
+        console.log('MANAGER: Reloaded Renderer.')
     }
 }

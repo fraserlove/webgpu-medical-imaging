@@ -4,12 +4,10 @@ import { RendererManager } from './manager';
 async function main(): Promise<void> {
 
     const context = new Context();
-    await context.loadVolume();
-    await context.loadTransferFunction();
+    await context.init();
     const manager = new RendererManager(context);
 
     await context.initWebGPU();
-    console.log('Done');
     
     const run = () => {
         manager.render();

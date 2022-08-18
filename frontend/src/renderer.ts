@@ -37,8 +37,9 @@ export class Renderer {
     private commandEncoder: GPUCommandEncoder;
     private renderPassDescriptor: GPURenderPassDescriptor;
 
-    constructor(manager: RendererManager) {
-        this.renderID = (new Date()).getTime(); // Key in hashmap is time in milliseconds when created
+    constructor(manager: RendererManager, renderID?: number) {
+        if (renderID != undefined) this.renderID = renderID;
+        else this.renderID = (new Date()).getTime(); // Key in hashmap is time in milliseconds when created
         this.context = manager.getContext();
         this.camera = new Camera(this.context.getVolume());
         this.controller = new Controller(this.context.newWindow(this.renderID), this.camera);
@@ -213,6 +214,7 @@ export class Renderer {
     }
 
     protected initComputeGroup(): void {
+        this.computeBindGroupEntries = [];
         this.computeBindGroupEntries.push({ binding: 0, resource: { buffer: this.computeUniformBuffer } });
         this.computeBindGroupEntries.push({ binding: 1, resource: this.volumeTexture.createView() });
         this.computeBindGroupEntries.push({ binding: 2, resource: this.sampler });

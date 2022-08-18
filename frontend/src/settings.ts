@@ -24,6 +24,12 @@ export class RendererSettings {
         this.manager = manager;
         this.gui = new GUI({ title: 'Renderer', width: 220, autoPlace: false });
         this.gui.domElement.id = 'gui';
+
+        this.gui.add(manager.getContext().getVolume(), 'filename', manager.getContext().getVolumeIDs()).onChange(async volumeID => {
+            await manager.getContext().loadVolume(volumeID);
+            manager.reloadRenderer(this.renderID);
+        });
+        
         manager.getContext().getContainer(this.renderID).appendChild(this.gui.domElement);
     }
 

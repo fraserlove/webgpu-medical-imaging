@@ -7,8 +7,8 @@ import { RendererManager } from './manager';
 
 export class RendererMPR extends Renderer {
 
-    constructor(manager: RendererManager) {
-        super(manager);
+    constructor(manager: RendererManager, renderID?: number) {
+        super(manager, renderID);
         this.renderShaderType = mpr;
         this.settings = new SettingsMPR(this.renderID, manager);
         if (this.context.getVolume().bitsPerVoxel == 8) this.computeShaderType = mip8;

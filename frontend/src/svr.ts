@@ -9,8 +9,8 @@ export class RendererSVR extends Renderer {
 
     private transferFunctionTexture: GPUTexture;
 
-    constructor(manager: RendererManager) {
-        super(manager);
+    constructor(manager: RendererManager, renderID?: number) {
+        super(manager, renderID);
         this.renderShaderType = svr;
         this.settings = new SettingsSVR(this.renderID, manager);
         if (this.context.getVolume().bitsPerVoxel == 8) this.computeShaderType = ea8;
@@ -46,8 +46,16 @@ export class RendererSVR extends Renderer {
     }
 
     protected initComputeGroup(): void {
+        this.computeBindGroupEntries = [];
+        this.computeBindGroupEntries.push({ binding: 0, resource: { buffer: this.computeUniformBuffer } });
+        this.computeBindGroupEntries.push({ binding: 1, resource: this.volumeTexture.createView() });
+        this.computeBindGroupEntries.push({ binding: 2, resource: this.sampler });
         this.computeBindGroupEntries.push({ binding: 3, resource: this.transferFunctionTexture.createView() });
-        super.initComputeGroup()
+
+        this.computeBindGroup = this.context.getDevice().createBindGroup({
+            layout: this.computeBindGroupLayout,
+            entries: this.computeBindGroupEntries
+        });
     }
 
     protected getComputeUniformData(): Float32Array {

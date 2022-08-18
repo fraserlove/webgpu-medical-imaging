@@ -1,6 +1,7 @@
 export class Context {
     private volume: any;
     private transferFunction: any;
+    private volumeIDs: string[];
     private adapter: GPUAdapter;
     private device: GPUDevice;
     private queue: GPUQueue;
@@ -10,6 +11,7 @@ export class Context {
     private contexts: Map<number, GPUCanvasContext>;
 
     constructor() {
+        this.volumeIDs = [];
         this.containers = new Map<number, HTMLDivElement>();
         this.windows = new Map<number, HTMLCanvasElement>();
         this.contexts = new Map<number, GPUCanvasContext>();
@@ -17,6 +19,7 @@ export class Context {
 
     public getVolume(): any { return this.volume; }
     public getTransferFunction(): any { return this.transferFunction; }
+    public getVolumeIDs(): string[] { return this.volumeIDs; }
     public getDevice(): GPUDevice { return this.device; }
     public getQueue(): GPUQueue { return this.queue; }
     public getContainer(id: number): HTMLDivElement { return this.containers.get(id); }
@@ -24,15 +27,30 @@ export class Context {
     public getGPUContext(id: number): GPUCanvasContext { return this.contexts.get(id); }
     public displayFormat(): GPUTextureFormat { return navigator.gpu.getPreferredCanvasFormat(); }
 
-    public async loadVolume(): Promise<void> {
-        console.log('CONTEXT: Loading Volume...');
+    public async loadVolume(id: string): Promise<void> {
         let volumes = await (await fetch('http://localhost:8080/volumes')).json();
-        this.volume = volumes[0];
-        this.volume.data = await (await fetch('http://localhost:8080/volume/' + this.volume.filename)).arrayBuffer();
-        //for (let i = 0; i < volumes.length; i++) console.log(volumes[i]);
+        for (let i = 0; i < volumes.length; i++) {
+            if (volumes[i].filename == id)  {
+                this.volume = volumes[i];
+                this.volume.data = await (await fetch('http://localhost:8080/volume/' + this.volume.filename)).arrayBuffer();
+            }
+        }
+        console.log('CONTEXT: Loaded ' + this.volume.filename);
     }
 
-    public async loadTransferFunction(): Promise<void> {
+    public async init(): Promise<void> {
+        await this.initVolumes();
+        await this.initTransferFunctions();
+    }
+
+    private async initVolumes(): Promise<void> {
+        console.log('CONTEXT: Loading Volume...');
+        let volumes = await (await fetch('http://localhost:8080/volumes')).json();
+        for (let i = 0; i < volumes.length; i++) this.volumeIDs.push(volumes[i].filename);
+        await this.loadVolume(volumes[0].filename);
+    }
+
+    private async initTransferFunctions(): Promise<void> {
         console.log('CONTEXT: Loading Transfer Function...');
         let transferFunctions = await (await fetch('http://localhost:8080/transfer_functions')).json();
         this.transferFunction = transferFunctions[0];

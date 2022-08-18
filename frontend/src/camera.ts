@@ -115,4 +115,9 @@ export class Camera {
     }
 
     public resize(size: number[]): void { this.imageSize = size; }
+
+    public updateVolume(volume: any) {
+        this.volumeBounds = volume.boundingBox;
+        this.volumeDataScale = volume.boundingBox[2] / volume.size[2];
+    }
 }
