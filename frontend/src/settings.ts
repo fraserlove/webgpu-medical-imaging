@@ -9,8 +9,8 @@ export class GlobalSettings {
         this.gui.domElement.id = 'gui-global';
         document.body.appendChild(this.gui.domElement);
 
-        this.gui.add(manager, 'addMPR');
-        this.gui.add(manager, 'addSVR');
+        this.gui.add(manager, 'addMPR').name('Add MPR');
+        this.gui.add(manager, 'addSVR').name('Add SVR');
     }
 }
 

@@ -1,5 +1,4 @@
 const path = require('path');
-const webpack = require('webpack');
 const nodeExternals = require('webpack-node-externals');
 
 const common = {
@@ -23,19 +22,8 @@ const common = {
     },
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
-        fallback: { 
-            "buffer": require.resolve('buffer/'),
-        }
     },
-    mode: 'development',
-    plugins: [
-    
-        // CRITICAL: Work around for Buffer is undefined:
-        // https://github.com/webpack/changelog-v5/issues/10
-        new webpack.ProvidePlugin({
-        Buffer: ['buffer', 'Buffer'],
-        }),
-    ]
+    mode: 'development'
 }
 
 const frontend = {
