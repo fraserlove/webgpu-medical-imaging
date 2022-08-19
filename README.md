@@ -1,4 +1,4 @@
-# WebGPU Client Side Rendering for Medical Imaging
+# WebGPU Client Side Rendering for 3D Medical Imaging
 
 A WebGPU rendering application to display 3D medical imaging data in the browser. This application investigates and showcases the viability of the new WebGPU framework in client-side rendering of 3D medical imaging.
 
