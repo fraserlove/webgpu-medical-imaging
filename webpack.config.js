@@ -1,5 +1,4 @@
 const path = require('path');
-const nodeExternals = require('webpack-node-externals');
 
 const common = {
     devtool: 'inline-source-map',
@@ -13,10 +12,6 @@ const common = {
             {
                 test: /\.(wgsl|glsl|vs|fs)$/,
                 loader: 'ts-shader-loader'
-            },
-            {
-                test: /\.css$/i,                                                                                                                                                             
-                use: ["style-loader", "css-loader"]                                                                                                                      
             }
         ],
     },
@@ -30,21 +25,10 @@ const frontend = {
     entry: './frontend/src/index.ts',
     output: {
         filename: 'bundle.js',
-        path: path.resolve(__dirname, 'frontend/dist'),
+        path: path.resolve(__dirname, 'backend/static'),
     },
-}
-
-const backend = {
-    entry: './backend/main.ts',
-    output: {
-        filename: 'main.js',
-        path: path.resolve(__dirname, 'backend/build'),
-    },
-    target: 'node',
-    externals: [nodeExternals()],
 }
 
 module.exports = [
-    Object.assign({} , common, frontend),
-    Object.assign({} , common, backend)
+    Object.assign({} , common, frontend)
 ];

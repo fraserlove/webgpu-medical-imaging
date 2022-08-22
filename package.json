@@ -4,7 +4,6 @@
   "description": "",
   "private": true,
   "scripts": {
-    "start": "npm run build && node backend/build/main.js",
     "build": "webpack"
   },
   "repository": {
