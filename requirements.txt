@@ -1,6 +1,6 @@
-Flask==1.1.2
-gdcm==1.1
-numpy==1.23
+Flask==2.2.2
+numpy==1.23.2
 pydicom==2.3.0
-python_gdcm==3.0.15
+python-gdcm==3.0.15
 xmltodict==0.13.0
+

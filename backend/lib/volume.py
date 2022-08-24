@@ -21,7 +21,6 @@ class Volume:
 
     @classmethod
     def from_dicom(cls, meta, depth, filename):
-        print(meta)
         size = [int(meta.Rows), int(meta.Columns), depth]
         bitsPerVoxel = meta.BitsAllocated
         bytesPerLine = size[0] * (bitsPerVoxel // 8)
