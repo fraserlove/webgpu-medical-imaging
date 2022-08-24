@@ -2,35 +2,36 @@
 
 A WebGPU rendering application to display 3D medical imaging data in the browser. This application investigates and showcases the viability of the new WebGPU framework in client-side rendering of 3D medical imaging.
 
-With a backend written using Python's Flask library the server deals with requests for imaging data and serves frontend WebGPU code to run in the browser. The two rendering techniques implemented is Multi-Planar Reformatting (MPR) rendering (using Maximum Intensity Projection) and Shaded Volume Rendering (SVR) (using Blinn-Phong lighting). The application provides numerous parameters to vary the output render, and options to create an arbitrary number of renderers. Both DICOM and raw volume and transfer function data are supported.
+With a backend written using Python's Flask library the server deals with requests for imaging data and serves frontend WebGPU code to run in the browser. The application implements two rendering techniques: Multi-Planar Reformatting (MPR) rendering using maximum intensity projection and Shaded Volume Rendering (SVR) using Blinn-Phong lighting. The application provides parameters to vary the output render, and options to create an arbitrary number of renderers. Both DICOM and RAW volume and transfer function data are supported.
 
-Note that in order for this to work your browser must [support WebGPU](https://github.com/gpuweb/gpuweb/wiki/Implementation-Status) and have it enabled.
+Note that in order to run WebGPU code your browser must [support WebGPU](https://github.com/gpuweb/gpuweb/wiki/Implementation-Status) and have it enabled.
 
 ## Install and Usage
-Make sure you have git, Node.js and Python3 installed.
+Make sure you have Git, Node.js and Python3 installed.
 
 Clone the repository and download and install the Node.js and Python packages:
-```
+```bash
 git clone ...
 cd webgpu-rendering-medical-imaging
 npm install
 ```
-Build the frontend application and start the backend Flask server, specifiying the path to directory containing the volume and transfer function metadata:
-```
+Build the frontend application and start the backend Flask server, specifiying the path to the resource directory containing the volumes and transfer functions:
+```bash
 npm run server {path-to-resources}/
 ```
 The Flask server runs on port `8080` and can be accessed in the browser by going to `http://localhost:8080`. The application should load with options to add either an MPR or SVR renderer in the bottom right of the browser window. The application initially loads the lexicographically first volume by default.
 
-## Controls and Keybindings
-For MPR and SVR Renderers:
-- `Left Click` + Drag: Rotate
-- `Right Click` + Drag: Pan
-- `Vertical Scroll`: Zoom
-- `Horizontal Scroll`: Cine
+## Controls, Settings and Keybindings
+#### For MPR and SVR Renderers:
+- Rotate: `Left Click` + Drag
+- Pan: `Right Click` + Drag
+- Zoom: `Vertical Scroll`
+- Cine: `Horizontal Scroll`
 
-For SVR Renderer:
-- `Shift` + `Left Click` + Drag: Change light direction
+#### For SVR Renderer:
+- Change light direction: `Shift` + `Left Click` + Drag
 
+### Settings
 A GUI is provided for each renderer to change settings such as:
 - Slab X,Y and Z start and end points
 - Window Width
@@ -45,7 +46,7 @@ A GUI is provided for each renderer to change settings such as:
 
 - DICOM files must be placed under a named directory in the resources folder. The filename of this folder should describe the whole volume and is used as the unique identifier for the volume.
 
-- DICOM files must be named in the order which they appear in the volume. So `img-001.dcm`, `img-002.dcm`, ... where the numbers describe their position in the volume.
+- DICOM files must be named in the order which they appear in the volume. So `img-001.dcm`, `img-002.dcm`, ... - where the numbers describe their position in the volume.
 
 - The `.xml` and `.raw`/`.tf1` pairs of files for describing volumes and transfer functions must have the exact same filename as eachother and be placed directly under the resources directory in order to be loaded correctly. Inside each of the `.xml` files the corresponding `<Filename>` tag must match the exact `.raw` or `.tf1` filename.
 
@@ -53,7 +54,7 @@ A GUI is provided for each renderer to change settings such as:
 
 - Only `.raw` volume files with the pixel format `gray8`, `gray8s`, `gray16` and `gray16s` are supported.
 
-- Only `.tf1` transfer function files with the pixel format `rgba32f` is supported.
+- Only `.tf1` transfer function files with the pixel format `rgba32f` are supported.
 
 - Loading of large `.raw` volumes can take some time, especially if the volume is in a signed format as the file is chunked and converted to an unsigned format before being streamed to the client. Waiting for volumes to load before attempting to change any render settings is advised to reduce likelihood of errors.
 
