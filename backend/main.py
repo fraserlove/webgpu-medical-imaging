@@ -1,4 +1,4 @@
-import os, sys, xmltodict, json, struct, pydicom, numpy, gdcm
+import os, sys, xmltodict, json, struct, pydicom, numpy
 from flask import Flask, render_template, Response, stream_with_context
 from lib.volume import Volume
 from lib.transfer_function import TransferFunction

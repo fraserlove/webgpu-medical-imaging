@@ -4,7 +4,7 @@
   "description": "",
   "private": true,
   "scripts": {
-    "install": "pip install -r requirements.txt",
+    "install": "python -m pip install -r requirements.txt",
     "build": "webpack",
     "server": "npm run build && python backend/main.py"
   },
