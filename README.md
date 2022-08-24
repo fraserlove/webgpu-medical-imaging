@@ -31,7 +31,7 @@ The Flask server runs on port `8080` and can be accessed in the browser by going
 #### For SVR Renderer:
 - Change light direction: `Shift` + `Left Click` + Drag
 
-### Settings
+#### Settings
 A GUI is provided for each renderer to change settings such as:
 - Slab X,Y and Z start and end points
 - Window Width
