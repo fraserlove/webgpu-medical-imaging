@@ -58,9 +58,9 @@ class Server():
 
     def start(self):
         self.app.run(host='0.0.0.0', port=self.port)
-        print('Server started at http://localhost:' + self.port)
 
     def chunk_dicom(self, path):
+        print('Chunking DICOM:', path)
         for file in sorted([f for f in os.listdir(path) if f.split('.')[-1] == 'dcm']):
             meta = pydicom.read_file(os.path.join(path, file))
             rescaleSlope = 1 if meta.get('RescaleSlope') == None else meta.RescaleSlope
@@ -69,6 +69,7 @@ class Server():
             yield out.astype(numpy.uint16).tobytes()
 
     def chunk_file(self, path, signed, bitsPerVoxel):
+        print('Chunking RAW:', path)
         CHUNK_SIZE = 2 ** 24
         with open(path, 'rb') as file:
             while True:
