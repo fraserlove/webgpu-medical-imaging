@@ -7,7 +7,7 @@ With a backend written using Python's Flask library the server deals with reques
 Note that in order to run WebGPU code your browser must [support WebGPU](https://github.com/gpuweb/gpuweb/wiki/Implementation-Status) and have it enabled.
 
 ## Install and Usage
-Make sure you have Git, Node.js and Python3 installed.
+Install the latest versions of Git, Node.js and Python.
 
 Clone the repository and download and install the Node.js and Python packages:
 ```bash

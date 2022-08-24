@@ -6,7 +6,7 @@
   "scripts": {
     "install": "pip install -r requirements.txt",
     "build": "webpack",
-    "server": "npm run build && python3 backend/main.py"
+    "server": "npm run build && python backend/main.py"
   },
   "repository": {
     "type": "git",
