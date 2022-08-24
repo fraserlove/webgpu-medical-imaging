@@ -22,13 +22,13 @@ npm run server {path-to-resources}/
 The Flask server runs on port `8080` and can be accessed in the browser by going to `http://localhost:8080`. The application should load with options to add either an MPR or SVR renderer in the bottom right of the browser window. The application initially loads the lexicographically first volume by default.
 
 ## Controls, Settings and Keybindings
-#### For MPR and SVR Renderers:
+#### MPR and SVR Keybindings:
 - Rotate: `Left Click` + Drag
 - Pan: `Right Click` + Drag
 - Zoom: `Vertical Scroll`
 - Cine: `Horizontal Scroll`
 
-#### For SVR Renderer:
+#### Exclusive SVR Keybindings:
 - Change light direction: `Shift` + `Left Click` + Drag
 
 #### Settings
