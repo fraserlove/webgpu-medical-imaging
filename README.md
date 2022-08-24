@@ -2,7 +2,7 @@
 
 A WebGPU rendering application to display 3D medical imaging data in the browser. This application investigates and showcases the viability of the new WebGPU framework in client-side rendering of 3D medical imaging.
 
-With a backend written using Python's Flask library the server deals with requests for imaging data and serves frontend WebGPU code to run in the browser. The two rendering techniques implemented is Multi-Planar Reformatting (MPR) rendering (using Maximum Intensity Projection) and Shaded Volume Rendering (SVR) (using Blinn-Phong lighting). The application provides numerous parameters to vary the output render, and options to create an arbitrary number of renderers.
+With a backend written using Python's Flask library the server deals with requests for imaging data and serves frontend WebGPU code to run in the browser. The two rendering techniques implemented is Multi-Planar Reformatting (MPR) rendering (using Maximum Intensity Projection) and Shaded Volume Rendering (SVR) (using Blinn-Phong lighting). The application provides numerous parameters to vary the output render, and options to create an arbitrary number of renderers. Both DICOM and raw volume and transfer function data are supported.
 
 Note that in order for this to work your browser must [support WebGPU](https://github.com/gpuweb/gpuweb/wiki/Implementation-Status) and have it enabled.
 
@@ -14,25 +14,73 @@ Clone the repository and download and install the Node.js and Python packages:
 git clone ...
 cd webgpu-rendering-medical-imaging
 npm install
-pip install -r requirements.txt
 ```
-Build and compile the frontend of the application:
+Build the frontend application and start the backend Flask server, specifiying the path to directory containing the volume and transfer function metadata:
 ```
-npm run build
+npm run server {path-to-resources}/
 ```
-Start the backend Flask server, specifiying the path to directory containing the volume and transfer function metadata:
-```
-python backend/main.py {path-to-resources}/
-```
-The Flask server runs on port `8080` and can be accessed in the browser by going to `http://localhost:8080`. The application should load with options to add a renderer in the bottom right of the browser window.
+The Flask server runs on port `8080` and can be accessed in the browser by going to `http://localhost:8080`. The application should load with options to add either an MPR or SVR renderer in the bottom right of the browser window. The application initially loads the lexicographically first volume by default.
 
 ## Controls and Keybindings
-Once the application has loaded, you can left click and drag to rotate, right click and drag to pan, scroll vertically to 
-zoom and scroll horizontally to cine. The direction of the light source in the SVR renderer can be updated using `Shift` and dragging with the left mouse button. A GUI is provided to change other render specific variables.
+For MPR and SVR Renderers:
+- `Left Click` + Drag: Rotate
+- `Right Click` + Drag: Pan
+- `Vertical Scroll`: Zoom
+- `Horizontal Scroll`: Cine
 
-## Notes
-- Due to the way volumes and transfer functions have been implemented, each volume and transfer function must have a unique filename as this is used to identify individual volumes and transfer functions.
+For SVR Renderer:
+- `Shift` + `Left Click` + Drag: Change light direction
 
-- The `.xml` and `.raw`/`.tf1` files for volumes and transfer functions must have the same filename and be placed under the same directory in order to be loaded correctly.
+A GUI is provided for each renderer to change settings such as:
+- Slab X,Y and Z start and end points
+- Window Width
+- Window Level
+- Shininess
+- Brightness
+- Light Colour
+- Option to Include Specular
 
-- Note that only volumes with the pixel format `grey16`, `grey16s`, `grey8` and `grey8s` are supported.
+## Support Notes
+- Due to the way volumes and transfer functions have been implemented, each volume and transfer function must have a unique filename as this is used to identify individual volumes and transfer functions. This includes the directory name holding DICOM files and the `.xml`/`.raw` pairs of as well - e.g. `Brain/` holding DICOM files and `Brain.xml`/`Brain.raw` cannot both exist.
+
+- DICOM files must be placed under a named directory in the resources folder. The filename of this folder should describe the whole volume and is used as the unique identifier for the volume.
+
+- DICOM files must be named in the order which they appear in the volume. So `img-001.dcm`, `img-002.dcm`, ... where the numbers describe their position in the volume.
+
+- The `.xml` and `.raw`/`.tf1` pairs of files for describing volumes and transfer functions must have the exact same filename as eachother and be placed directly under the resources directory in order to be loaded correctly. Inside each of the `.xml` files the corresponding `<Filename>` tag must match the exact `.raw` or `.tf1` filename.
+
+- Once loaded, volumes specified in `.raw` and DICOM formats will be treated equally.
+
+- Only `.raw` volume files with the pixel format `gray8`, `gray8s`, `gray16` and `gray16s` are supported.
+
+- Only `.tf1` transfer function files with the pixel format `rgba32f` is supported.
+
+- Loading of large `.raw` volumes can take some time, especially if the volume is in a signed format as the file is chunked and converted to an unsigned format before being streamed to the client. Waiting for volumes to load before attempting to change any render settings is advised to reduce likelihood of errors.
+
+- Volume and transfer functions are loaded on demand, so only one volume and one transfer function is loaded in the clients browser at a time. This decreases load times and memory usage, however can result in longer wait time when changing volumes and transfer functions in the application.
+
+- Useful client-side debug information can be found by opening up the console should any errors occur.
+
+A typical resource folder could look like this:
+
+```bash
+./res
+├── Abdomen
+│   ├── img.001.dcm
+│   ├── ...
+│   └── img.250.dcm
+├── Brain 
+│   ├── scan-300.dcm
+│   ├── ...
+│   └── scan-640.dcm
+├── Bone.tf1
+├── Bone.xml
+├── Lungs.raw
+├── Lungs.xml
+├── Hand.raw
+└── Hand.xml
+```
+
+## Known Bugs
+
+- Part of volume is cut off when rotating volumes with a width/height to depth ratio > 1. This effect worsens as the ratio increases past one and is most noticable on flatter volumes. This bug appears equally in both the MPR and SVR renderer.

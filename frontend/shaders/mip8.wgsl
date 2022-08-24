@@ -1,7 +1,6 @@
 struct Uniforms {
     transform: mat4x4<f32>,
-    slabCentre: f32,
-    noSamples: f32
+    slab: mat3x2<f32>
 };
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -17,22 +16,19 @@ fn vert_main(@location(0) position: vec2<f32>) -> @builtin(position) vec4<f32> {
 fn frag_main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
     var size = vec3<f32>(textureDimensions(volumeTexture));
     var maxIntensity: f32 = 0; // Only dealing with unsigned integers
-    var start = i32(uniforms.slabCentre - uniforms.noSamples / 2);
-    var end = i32(uniforms.slabCentre + uniforms.noSamples / 2);
     
-    for (var k = start; k < end; k++) {
+    for (var k = 0; k < i32(size.z); k++) {
         var transformed = uniforms.transform * vec4<f32>(coord.xy, f32(k), 1.0);
         // Scale down transformed coordinates to fit within 0->1 range
         var uvz_coords = vec3<f32>(transformed.x / size.x, transformed.y / size.y, transformed.z / size.z);
         var sample = textureSample(volumeTexture, volumeSampler, uvz_coords);
         // Check transformed coordinate is still inside bounds - removes texture clamp artefact
-        if (transformed.x < size.x && transformed.x > 0 && transformed.y < size.y && transformed.y > 0 && transformed.z < size.z && transformed.z > 0) {
-            // Intensity stored over 8-bit red and green channels
-            var intensity = sample.x;
-            if (intensity > maxIntensity) {
-                maxIntensity = intensity;
-            }
-        }
+        if (transformed.x < uniforms.slab[0][0] || transformed.x > uniforms.slab[0][1]) { continue; }
+        if (transformed.y < uniforms.slab[1][0] || transformed.y > uniforms.slab[1][1]) { continue; }
+        if (transformed.z < uniforms.slab[2][0] || transformed.z > uniforms.slab[2][1]) { continue; }
+        // Intensity stored over 8-bit red and green channels
+        var intensity = sample.x;
+        if (intensity > maxIntensity) { maxIntensity = intensity; }
     }
     return vec4<f32>(maxIntensity, maxIntensity, maxIntensity, 1);
  }

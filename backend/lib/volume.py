@@ -15,7 +15,7 @@ class Volume:
         bitsPerVoxel = int(meta['Bits_per_voxel'])
         bytesPerLine = int(meta['Bytes_per_line'])
         signed = 1 if meta['Pixel_Format'][-1] == 's' else 0
-        filename = meta['Filename']
+        filename = meta['Filename'].split('.')[0]
         boundingBox = [ float(i) for i in meta['Bounding_box'][1:-1].split(',') ][:3]
         return cls(size, bitsPerVoxel, bytesPerLine, signed, filename, boundingBox)
 
@@ -26,7 +26,7 @@ class Volume:
         bitsPerVoxel = meta.BitsAllocated
         bytesPerLine = size[0] * (bitsPerVoxel // 8)
         signed = meta.PixelRepresentation
-        boundingBox = [size[0] - 1, size[1] - 1, size[2]] # * meta.PixelSpacing[0]]
+        boundingBox = [size[0] - 1, size[1] - 1, size[2] * meta.PixelSpacing[0]]
         return cls(size, bitsPerVoxel, bytesPerLine, signed, filename, boundingBox)
 
     def find_format(self):

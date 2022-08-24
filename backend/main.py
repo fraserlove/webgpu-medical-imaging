@@ -14,7 +14,7 @@ class Server():
         self.read_resources()
 
     def read_resources(self):
-        filenames = [f for f in os.listdir(self.res_path)]
+        filenames = sorted([f for f in os.listdir(self.res_path)])
         for filename in filenames:
             if filename.split('.')[-1] == 'xml':
                 file = os.path.join(self.res_path, filename)
@@ -49,7 +49,7 @@ class Server():
             for volume in self.volumes:
                 if filename == volume.filename:
                     if os.path.isdir(os.path.join(self.res_path, filename)): return Response(stream_with_context(self.chunk_dicom(os.path.join(self.res_path, filename))))
-                    else: return Response(stream_with_context(self.chunk_file(os.path.join(self.res_path, filename), volume.signed, volume.bitsPerVoxel)))
+                    else: return Response(stream_with_context(self.chunk_file(os.path.join(self.res_path, filename + '.raw'), volume.signed, volume.bitsPerVoxel)))
 
         @self.app.route('/transfer_function/<string:filename>')
         def send_transfer_function(filename = None):

@@ -4,7 +4,9 @@
   "description": "",
   "private": true,
   "scripts": {
-    "build": "webpack"
+    "install": "pip install -r requirements.txt",
+    "build": "webpack",
+    "server": "npm run build && python3 backend/main.py"
   },
   "repository": {
     "type": "git",
