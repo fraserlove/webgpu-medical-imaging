@@ -14,7 +14,7 @@ class Server():
         self.read_resources()
 
     def read_resources(self):
-        filenames = sorted([f for f in os.listdir(self.res_path)])
+        filenames = sorted([f for f in os.listdir(self.res_path) if not f.startswith('.')])
         for filename in filenames:
             if filename.split('.')[-1] == 'xml':
                 file = os.path.join(self.res_path, filename)
@@ -23,7 +23,7 @@ class Server():
                 elif 'Transfer_Function' in meta: self.transfer_functions.append(TransferFunction(meta['Transfer_Function']))
 
             if os.path.isdir(os.path.join(self.res_path, filename)):
-                dcm_files = [f for f in os.listdir(os.path.join(self.res_path, filename)) if f.split('.')[-1] == 'dcm']
+                dcm_files = [f for f in os.listdir(os.path.join(self.res_path, filename)) if f.split('.')[-1] == 'dcm' and not f.startswith('.')]
                 if len(dcm_files) > 0:
                     dcm_file = os.path.join(self.res_path, filename, dcm_files[0])
                     self.volumes.append(Volume.from_dicom(pydicom.read_file(dcm_file), len(dcm_files), filename))
@@ -61,7 +61,7 @@ class Server():
 
     def chunk_dicom(self, path):
         print('Chunking DICOM:', path)
-        for file in sorted([f for f in os.listdir(path) if f.split('.')[-1] == 'dcm']):
+        for file in sorted([f for f in os.listdir(path) if f.split('.')[-1] == 'dcm' and not f.startswith('.')]):
             meta = pydicom.read_file(os.path.join(path, file))
             rescaleSlope = 1 if meta.get('RescaleSlope') == None else meta.RescaleSlope
             rescaleIntercept = 0 if meta.get('RescaleIntercept') == None else meta.RescaleIntercept
