@@ -1,5 +1,11 @@
+ifeq ($(OS),Windows_NT)
+	PYTHON := python
+else
+	PYTHON := python3
+endif
+
 install:
-	yarn install & python3 -m pip install -r requirements.txt
+	yarn install & $(PYTHON) -m pip install -r requirements.txt
 
 start:
-	yarn webpack --mode production & python3 app.py $(RESOURCES)
+	yarn webpack --mode production & $(PYTHON) app.py $(RESOURCES)
