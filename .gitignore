@@ -1,5 +1,4 @@
-*.js
 .DS_Store
 node_modules/
-res/
 __pycache__/
+static/dist

@@ -1,34 +1,27 @@
 const path = require('path');
 
-const common = {
-    devtool: 'inline-source-map',
+module.exports = {
+    entry: './static/src/ts/main.ts',
+    output: {
+        filename: 'bundle.js',
+        path: path.resolve(__dirname, 'static/dist'),
+    },
+
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
+                test: /\.ts$/,
                 use: 'ts-loader',
-                exclude: /node_modules/,
+                exclude: /node_modules/
             },
             {
-                test: /\.(wgsl|glsl|vs|fs)$/,
+                test: /\.(wgsl|vs|fs)$/,
                 loader: 'ts-shader-loader'
             }
-        ],
+        ]
     },
+
     resolve: {
-        extensions: ['.tsx', '.ts', '.js'],
-    },
-    mode: 'development'
-}
-
-const frontend = {
-    entry: './frontend/src/index.ts',
-    output: {
-        filename: 'bundle.js',
-        path: path.resolve(__dirname, 'backend/static'),
+        extensions: ['.ts']
     },
 }
-
-module.exports = [
-    Object.assign({} , common, frontend)
-];

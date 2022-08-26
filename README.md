@@ -14,17 +14,17 @@ Note that in order to run WebGPU code your browser must [support WebGPU](https:/
 </div>
 
 ## Install and Usage
-Install the latest versions of Git, Node.js and Python.
+Install the latest versions of Git, Yarn and Python.
 
-Clone the repository and download and install the Node.js and Python packages:
+Clone the repository and download and install Yarn and Python packages:
 ```bash
 git clone ...
 cd webgpu-rendering-medical-imaging
-npm install
+make
 ```
 Build the frontend application and start the backend Flask server, specifiying the path to the resource directory containing the volumes and transfer functions:
 ```bash
-npm run server {path-to-resources}/
+make start RESOURCES={path-to-resources}
 ```
 The Flask server runs on port `8080` and can be accessed in the browser by going to `http://localhost:8080`. The application should load with options to add either an MPR or SVR renderer in the bottom right of the browser window. The application initially loads the lexicographically first volume by default.
 

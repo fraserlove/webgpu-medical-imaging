@@ -1,14 +1,14 @@
 import os, sys, xmltodict, json, struct, pydicom, numpy
 from flask import Flask, render_template, Response, stream_with_context
-from lib.volume import Volume
-from lib.transfer_function import TransferFunction
+from src.volume import Volume
+from src.transfer_function import TransferFunction
 
 class Server():
 
     def __init__(self):
         self.app = Flask(__name__)
         self.port = 8080
-        self.res_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '../', sys.argv[1]))
+        self.res_path = os.path.realpath(os.path.join(os.path.dirname(__file__), sys.argv[1]))
         self.volumes = []
         self.transfer_functions = []
         self.read_resources()

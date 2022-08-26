@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "backend/static",
+    "outDir": "static/dist",
     "sourceMap": true,
     "noImplicitAny": false,
     "module": "commonjs",
@@ -8,6 +8,7 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
-    "typeRoots": [ "./node_modules/@webgpu/types", "./node_modules/@types"]
-  }
+    "typeRoots": ["./node_modules/@webgpu/types"]
+  },
+  "exclude": ["node_modules", "webpack.config.js"]
 }

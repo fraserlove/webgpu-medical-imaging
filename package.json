@@ -1,20 +1,8 @@
 {
   "name": "webgpu-rendering-medical-imaging",
   "version": "1.0.0",
-  "description": "",
-  "private": true,
-  "scripts": {
-    "install": "python -m pip install -r requirements.txt",
-    "build": "webpack",
-    "server": "npm run build && python backend/main.py"
-  },
-  "repository": {
-    "type": "git",
-    "url": ""
-  },
-  "author": "Canon Medical Research Europe.",
+  "author": "Fraser Love",
   "license": "MIT",
-  "homepage": "",
   "devDependencies": {
     "@types/node": "^18.7.13",
     "ts-loader": "^9.3.0",
@@ -27,10 +15,5 @@
     "@webgpu/types": "^0.1.19",
     "gl-matrix": "^3.4.3",
     "lil-gui": "^0.17.0"
-  },
-  "browser": {
-    "fs": false,
-    "path": false,
-    "os": false
   }
 }
