@@ -50,6 +50,12 @@ A GUI is provided for each renderer to change settings such as:
 
 - The `.xml` and `.raw`/`.tf1` pairs of files for describing volumes and transfer functions must have the exact same filename as eachother and be placed directly under the resources directory in order to be loaded correctly. Inside each of the `.xml` files the corresponding `<Filename>` tag must match the exact `.raw` or `.tf1` filename.
 
+- `.xml` files must contain valid XML, with a root node called either `<Transfer_Function>` or `<Volume_View>` for files specifying transfer function and volume metadata respectively.
+
+- `.xml` files containing volume metadata must contain the tags - `<Width>`, `<Height>`, `<Image_count>`, `<Bits_per_voxel>`, `<Bytes_per_line>`, `<Pixel_Format>`, `<Bounding_box>` and `<Filename>`.
+
+- `.xml` files containing transfer function metadata must contain the tags - `<Pixel_Format>`, `<Size>` and `<Filename>`.
+
 - Once loaded, volumes specified in `.raw` and DICOM formats will be treated equally.
 
 - Only `.raw` volume files with the pixel format `gray8`, `gray8s`, `gray16` and `gray16s` are supported.
