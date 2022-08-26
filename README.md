@@ -1,17 +1,17 @@
 # WebGPU Client Side Rendering for 3D Medical Imaging
 
+A WebGPU rendering application to display 3D medical imaging data in the browser. This application investigates and showcases the viability of the new WebGPU framework in client-side rendering of 3D medical imaging.
+
+With a backend written using Python's Flask library the server deals with requests for imaging data and serves frontend WebGPU code to run in the browser. The application implements two rendering techniques: Multi-Planar Reformatting (MPR) rendering using maximum intensity projection and Shaded Volume Rendering (SVR) using Blinn-Phong lighting. The application provides parameters to vary the output render, and options to create an arbitrary number of renderers. Both DICOM and RAW volume and transfer function data are supported.
+
+Note that in order to run WebGPU code your browser must [support WebGPU](https://github.com/gpuweb/gpuweb/wiki/Implementation-Status) and have it enabled.
+
 <div style='display: inline-block'>
   <img src="https://i.postimg.cc/HLhYRQLd/Screenshot-2022-08-24-at-21-24-05.png" width="200"/>
   <img src="https://i.ibb.co/CbspjwV/Screenshot-2022-08-24-at-09-14-34.png" width="200"/>
   <img src="https://i.ibb.co/KbwjjGk/Screenshot-2022-08-24-at-21-56-03.png" width="200"/>
   <img src="https://i.ibb.co/k3PWwv6/Screenshot-2022-08-24-at-22-10-15.png" width="200"/>
 </div>
-
-A WebGPU rendering application to display 3D medical imaging data in the browser. This application investigates and showcases the viability of the new WebGPU framework in client-side rendering of 3D medical imaging.
-
-With a backend written using Python's Flask library the server deals with requests for imaging data and serves frontend WebGPU code to run in the browser. The application implements two rendering techniques: Multi-Planar Reformatting (MPR) rendering using maximum intensity projection and Shaded Volume Rendering (SVR) using Blinn-Phong lighting. The application provides parameters to vary the output render, and options to create an arbitrary number of renderers. Both DICOM and RAW volume and transfer function data are supported.
-
-Note that in order to run WebGPU code your browser must [support WebGPU](https://github.com/gpuweb/gpuweb/wiki/Implementation-Status) and have it enabled.
 
 ## Install and Usage
 Install the latest versions of Git, Node.js and Python.
