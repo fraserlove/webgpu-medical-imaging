@@ -1,7 +1,7 @@
 # WebGPU Client Side Rendering for 3D Medical Imaging
 
 <div style='display: inline-block'>
-  <img src="https://i.ibb.co/10ccb82/Screenshot-2022-08-24-at-21-24-03.png" width="200"/>
+  <img src="https://i.postimg.cc/HLhYRQLd/Screenshot-2022-08-24-at-21-24-05.png" width="200"/>
   <img src="https://i.ibb.co/CbspjwV/Screenshot-2022-08-24-at-09-14-34.png" width="200"/>
   <img src="https://i.ibb.co/KbwjjGk/Screenshot-2022-08-24-at-21-56-03.png" width="200"/>
   <img src="https://i.ibb.co/k3PWwv6/Screenshot-2022-08-24-at-22-10-15.png" width="200"/>
