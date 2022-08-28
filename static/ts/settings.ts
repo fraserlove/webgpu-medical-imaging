@@ -53,8 +53,7 @@ export class RendererSettings {
         manager.getContext().getContainer(this.renderID).appendChild(this.gui.domElement);
     }
 
-    public getRenderSettings(): Float32Array { return new Float32Array(1); }
-    public getComputeSettings(): Float32Array { return new Float32Array(1); }
+    public getSettings(): Float32Array { return new Float32Array(1); }
 }
 
 export class SettingsMPR extends RendererSettings {
@@ -71,8 +70,10 @@ export class SettingsMPR extends RendererSettings {
         this.gui.add({destroyRenderer: manager.destroyRenderer.bind(manager, this.renderID)}, 'destroyRenderer').name('Delete');
     }
 
-    public getComputeSettings(): Float32Array { return new Float32Array([this.xStart, this.xEnd, this.yStart, this.yEnd, this.zStart, this.zEnd]); } 
-    public getRenderSettings(): Float32Array { return new Float32Array([this.wWidth, this.wLevel]); }
+    public getSettings(): Float32Array { 
+        let slab = [this.xStart, this.xEnd, this.yStart, this.yEnd, this.zStart, this.zEnd]
+        return new Float32Array([...slab, this.wWidth, this.wLevel]); 
+    }
 }
 
 export class SettingsSVR extends RendererSettings {
@@ -106,7 +107,7 @@ export class SettingsSVR extends RendererSettings {
         else return [0, 0, 0];
     }
 
-    public getComputeSettings(): Float32Array { 
+    public getSettings(): Float32Array { 
         let slab = [this.xStart, this.xEnd, this.yStart, this.yEnd, this.zStart, this.zEnd]
         return new Float32Array([...this.getColour(), this.brightness, ...slab, this.shininess]); 
     }

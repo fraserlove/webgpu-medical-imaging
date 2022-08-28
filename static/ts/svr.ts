@@ -1,6 +1,5 @@
 import { Renderer } from './renderer';
 import { SettingsSVR } from './settings';
-import ea from '../shaders/ea.wgsl';
 import svr from '../shaders/svr.wgsl';
 import { RendererManager } from './manager';
 
@@ -10,13 +9,12 @@ export class RendererSVR extends Renderer {
 
     constructor(manager: RendererManager, renderID?: number) {
         super(manager, renderID);
-        this.renderShaderType = svr;
-        this.computeShaderType = ea;
+        this.shaderType = svr;
         this.settings = new SettingsSVR(this.renderID, manager);
     }
 
     protected initPipelineLayouts(): void {
-        this.computeBindGroupLayoutEntries.push({
+        this.bindGroupLayoutEntries.push({
             binding: 3,
             visibility: GPUShaderStage.FRAGMENT,
             texture: { sampleType: 'unfilterable-float', viewDimension: '2d' }
@@ -43,34 +41,34 @@ export class RendererSVR extends Renderer {
         this.context.getQueue().writeTexture({ texture: this.transferFunctionTexture }, this.context.getTransferFunction().data, imageDataLayout, this.context.getTransferFunction().size);
     }
 
-    protected initComputeGroup(): void {
-        this.computeBindGroupEntries = [];
-        this.computeBindGroupEntries.push({ binding: 0, resource: { buffer: this.computeUniformBuffer } });
-        this.computeBindGroupEntries.push({ binding: 1, resource: this.volumeTexture.createView() });
-        this.computeBindGroupEntries.push({ binding: 2, resource: this.sampler });
-        this.computeBindGroupEntries.push({ binding: 3, resource: this.transferFunctionTexture.createView() });
+    protected initBindGroup(): void {
+        this.bindGroupEntries = [];
+        this.bindGroupEntries.push({ binding: 0, resource: { buffer: this.uniformBuffer } });
+        this.bindGroupEntries.push({ binding: 1, resource: this.volumeTexture.createView() });
+        this.bindGroupEntries.push({ binding: 2, resource: this.sampler });
+        this.bindGroupEntries.push({ binding: 3, resource: this.transferFunctionTexture.createView() });
 
-        this.computeBindGroup = this.context.getDevice().createBindGroup({
-            layout: this.computeBindGroupLayout,
-            entries: this.computeBindGroupEntries
+        this.bindGroup = this.context.getDevice().createBindGroup({
+            layout: this.bindGroupLayout,
+            entries: this.bindGroupEntries
         });
     }
 
-    protected getComputeUniformData(): Float32Array {
+    protected getUniformData(): Float32Array {
         let paddingLength = 2; // length of padding (bytelength of padding is this value * 4)
-        let computeUniformData = new Float32Array(this.camera.getViewMatrix().length + 
+        let uniformData = new Float32Array(this.camera.getViewMatrix().length + 
                                                     this.camera.getLightDir().length + 
                                                     this.context.getVolume().boundingBox.length + 
-                                                    (this.settings as SettingsSVR).getComputeSettings().length + 
+                                                    (this.settings as SettingsSVR).getSettings().length + 
                                                     2 + paddingLength);
                                                     
         // extra zeros are required padding, see - https://www.w3.org/TR/WGSL/#alignment-and-size
-        computeUniformData.set([...this.camera.getViewMatrix(), 
+        uniformData.set([...this.camera.getViewMatrix(), 
                                 ...this.camera.getLightDir(), 0,
                                 ...this.context.getVolume().boundingBox, 0, 
-                                ...(this.settings as SettingsSVR).getComputeSettings(), 
+                                ...(this.settings as SettingsSVR).getSettings(), 
                                 this.context.getTransferFunction().size[0],
                                 this.context.getVolume().bitsPerVoxel]);
-        return computeUniformData;
+        return uniformData;
     }
 }
