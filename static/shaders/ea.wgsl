@@ -6,7 +6,8 @@ struct Uniforms {
     brightness: f32,
     slab: mat3x2<f32>,
     shininess: f32,
-    transferWidth: f32
+    transferWidth: f32,
+    bitsPerVoxel: f32
 };
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -32,7 +33,8 @@ fn ray_box_intersection(bboxMin: vec3<f32>, bboxMax: vec3<f32>, pos: vec3<f32>, 
 }
 
 fn intensity(sample: vec4<f32>) -> f32 {
-    return sample.x * 65536; // 0 to 2^16
+    if (uniforms.bitsPerVoxel == 16) { return sample.x * 256 + sample.y * 65280; }
+    else { return sample.x * 65536; }
 }
 
 fn normal(pos: vec3<f32>) -> vec3<f32> {

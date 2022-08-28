@@ -1,7 +1,6 @@
 import { Renderer } from './renderer';
 import { SettingsSVR } from './settings';
-import ea16 from '../shaders/ea16.wgsl';
-import ea8 from '../shaders/ea8.wgsl';
+import ea from '../shaders/ea.wgsl';
 import svr from '../shaders/svr.wgsl';
 import { RendererManager } from './manager';
 
@@ -12,9 +11,8 @@ export class RendererSVR extends Renderer {
     constructor(manager: RendererManager, renderID?: number) {
         super(manager, renderID);
         this.renderShaderType = svr;
+        this.computeShaderType = ea;
         this.settings = new SettingsSVR(this.renderID, manager);
-        if (this.context.getVolume().bitsPerVoxel == 8) this.computeShaderType = ea8;
-        else if (this.context.getVolume().bitsPerVoxel == 16) this.computeShaderType = ea16;
     }
 
     protected initPipelineLayouts(): void {
@@ -64,14 +62,15 @@ export class RendererSVR extends Renderer {
                                                     this.camera.getLightDir().length + 
                                                     this.context.getVolume().boundingBox.length + 
                                                     (this.settings as SettingsSVR).getComputeSettings().length + 
-                                                    1 + paddingLength);
+                                                    2 + paddingLength);
                                                     
         // extra zeros are required padding, see - https://www.w3.org/TR/WGSL/#alignment-and-size
         computeUniformData.set([...this.camera.getViewMatrix(), 
                                 ...this.camera.getLightDir(), 0,
                                 ...this.context.getVolume().boundingBox, 0, 
                                 ...(this.settings as SettingsSVR).getComputeSettings(), 
-                                this.context.getTransferFunction().size[0]]);
+                                this.context.getTransferFunction().size[0],
+                                this.context.getVolume().bitsPerVoxel]);
         return computeUniformData;
     }
 }

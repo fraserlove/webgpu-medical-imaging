@@ -1,6 +1,7 @@
 struct Uniforms {
     transform: mat4x4<f32>,
-    slab: mat3x2<f32>
+    slab: mat3x2<f32>,
+    bitsPerVoxel: f32
 };
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -10,6 +11,11 @@ struct Uniforms {
 @vertex
 fn vert_main(@location(0) position: vec2<f32>) -> @builtin(position) vec4<f32> {
     return vec4<f32>(position, 0.0, 1.0);
+}
+
+fn intensity(sample: vec4<f32>) -> f32 {
+    if (uniforms.bitsPerVoxel == 16) { return (sample.x + sample.y * 255) / 256; } // Intensity stored over 8-bit red and green channels
+    else { return sample.x; } // Intensity stored over red channel only
 }
 
 @fragment
@@ -26,9 +32,7 @@ fn frag_main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
         if (transformed.x < uniforms.slab[0][0] || transformed.x > uniforms.slab[0][1]) { continue; }
         if (transformed.y < uniforms.slab[1][0] || transformed.y > uniforms.slab[1][1]) { continue; }
         if (transformed.z < uniforms.slab[2][0] || transformed.z > uniforms.slab[2][1]) { continue; }
-        // Intensity stored over 8-bit red and green channels
-        var intensity = (sample.x + sample.y * 255) / 256;
-        if (intensity > maxIntensity) { maxIntensity = intensity; }
+        if (intensity(sample) > maxIntensity) { maxIntensity = intensity(sample); }
     }
     return vec4<f32>(maxIntensity, maxIntensity, maxIntensity, 1);
  }

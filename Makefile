@@ -9,3 +9,6 @@ install:
 
 start:
 	yarn webpack --mode production & $(PYTHON) app.py $(RESOURCES)
+
+clean:
+	rm -rf ./node_modules & rm -rf ./static/dist & $(PYTHON) -m pip uninstall -r requirements.txt
