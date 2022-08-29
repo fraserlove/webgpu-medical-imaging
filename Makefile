@@ -5,10 +5,16 @@ else
 endif
 
 install:
-	yarn install & $(PYTHON) -m pip install -r requirements.txt
+	yarn install
+	$(PYTHON) -m venv venv
+	./venv/bin/pip install -r requirements.txt
 
 start:
-	yarn webpack --mode production & $(PYTHON) app.py $(RESOURCES)
+	yarn webpack --mode production & ./venv/bin/python3 app.py $(RESOURCES)
 
 clean:
-	rm -rf ./node_modules & rm -rf ./static/dist & $(PYTHON) -m pip uninstall -y -r requirements.txt
+	rm -rf ./node_modules
+	rm -rf ./static/dist
+	rm -rf __pycache__
+	rm -rf venv
+	
