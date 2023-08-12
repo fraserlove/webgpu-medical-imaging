@@ -13,13 +13,13 @@ Note that in order to run WebGPU code your browser must [support WebGPU](https:/
   <img src="https://i.ibb.co/k3PWwv6/Screenshot-2022-08-24-at-22-10-15.png" width="200"/>
 </div>
 
-## Install and Usage
+## Installation and Usage
 Install the latest versions of Git, Yarn and Python.
 
 Clone the repository and download and install Yarn and Python packages:
 ```bash
-git clone ...
-cd webgpu-rendering-medical-imaging
+git clone https://github.com/fraserlove/webgpu-medical-imaging.git
+cd webgpu-medical-imaging
 make
 ```
 Build the frontend application and start the backend Flask server, specifiying the path to the resource directory containing the volumes and transfer functions:
@@ -29,16 +29,16 @@ make start RESOURCES={path-to-resources}
 The Flask server runs on port `8080` and can be accessed in the browser by going to `http://localhost:8080`. The application should load with options to add either an MPR or SVR renderer in the bottom right of the browser window. The application initially loads the lexicographically first volume by default.
 
 ## Controls, Settings and Keybindings
-#### MPR and SVR Keybindings:
+### MPR and SVR Keybindings:
 - Rotate: `Left Click` + Drag
 - Pan: `Right Click` + Drag
 - Zoom: `Vertical Scroll`
 - Cine: `Horizontal Scroll`
 
-#### Exclusive SVR Keybindings:
+### Exclusive SVR Keybindings:
 - Change light direction: `Shift` + `Left Click` + Drag
 
-#### Settings
+### Settings
 A GUI is provided for each renderer to change settings such as:
 - Slab X,Y and Z start and end points
 - Window Width
