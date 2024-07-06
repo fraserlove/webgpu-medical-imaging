@@ -7,10 +7,10 @@ With a backend written using Python's Flask library the server deals with reques
 Note that in order to run WebGPU code your browser must [support WebGPU](https://github.com/gpuweb/gpuweb/wiki/Implementation-Status) and have it enabled.
 
 <div style='display: inline-block'>
-  <img src="https://i.postimg.cc/HLhYRQLd/Screenshot-2022-08-24-at-21-24-05.png" width="200"/>
-  <img src="https://i.ibb.co/CbspjwV/Screenshot-2022-08-24-at-09-14-34.png" width="200"/>
-  <img src="https://i.ibb.co/KbwjjGk/Screenshot-2022-08-24-at-21-56-03.png" width="200"/>
-  <img src="https://i.ibb.co/k3PWwv6/Screenshot-2022-08-24-at-22-10-15.png" width="200"/>
+  <img src="assets/1.png" width="200"/>
+  <img src="assets/2.png" width="200"/>
+  <img src="assets/3.png" width="200"/>
+  <img src="assets/4.png" width="200"/>
 </div>
 
 ## Installation and Usage
